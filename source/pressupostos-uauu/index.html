@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configurador de Pressupostos — UAUU weddings & events</title>
+  <link rel="stylesheet" href="colors_and_type.css" />
+  <!-- Bundler: code-referenced resources -->
+  <meta name="ext-resource-dependency" content="assets/logo-uauu-black.png" data-resource-id="uauuLogo" />
+
+  <!-- Thumbnail shown while bundle unpacks -->
+  <template id="__bundler_thumbnail" data-bg-color="#f5f2ed">
+    <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+      <rect width="400" height="200" fill="#f5f2ed"/>
+      <rect x="40" y="60" width="140" height="3" rx="1.5" fill="#cdc4b1"/>
+      <rect x="40" y="74" width="100" height="3" rx="1.5" fill="#cdc4b1"/>
+      <rect x="40" y="88" width="120" height="3" rx="1.5" fill="#cdc4b1"/>
+      <rect x="220" y="55" width="140" height="90" rx="4" fill="#fff" stroke="#eaeced" stroke-width="1"/>
+      <rect x="236" y="70" width="60" height="4" rx="2" fill="#1c1c1a"/>
+      <rect x="236" y="82" width="90" height="3" rx="1.5" fill="#cdc4b1"/>
+      <rect x="236" y="94" width="80" height="3" rx="1.5" fill="#cdc4b1"/>
+      <rect x="236" y="112" width="108" height="18" rx="3" fill="#1c1c1a"/>
+      <text x="200" y="170" font-family="Georgia,serif" font-size="11" fill="#7e8c8d" text-anchor="middle" letter-spacing="3">UAUU weddings &amp; events</text>
+    </svg>
+  </template>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--color-sand-pale); font-family: var(--font-serif); color: var(--color-ink); min-height: 100vh; }
+
+    .page-header {
+      background: var(--color-white); border-bottom: 1px solid var(--color-divider);
+      padding: 22px 48px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .page-header img { height: 34px; }
+    .page-header-center { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .page-header-label { font-family: var(--font-sans); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-muted); }
+    .lang-selector { display: flex; gap: 0; }
+    .lang-btn {
+      padding: 5px 12px; border: 1px solid var(--color-divider); background: var(--color-white);
+      font-family: var(--font-sans); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--color-muted); cursor: pointer; transition: var(--transition);
+    }
+    .lang-btn:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+    .lang-btn:last-child  { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-left: -1px; }
+    .lang-btn.active { background: var(--color-ink); border-color: var(--color-ink); color: var(--color-white); }
+
+    .app-body { display: grid; grid-template-columns: 1fr 400px; max-width: 1280px; margin: 0 auto; min-height: calc(100vh - 79px); }
+
+    /* ── Form panel ── */
+    .form-panel { padding: 48px 64px 80px; border-right: 1px solid var(--color-divider); background: var(--color-white); }
+
+    .form-section { margin-bottom: 44px; }
+    .section-title {
+      font-family: var(--font-sans); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--color-muted); margin-bottom: 24px; padding-bottom: 10px; border-bottom: 1px solid var(--color-divider);
+    }
+
+    .field label {
+      display: block; font-family: var(--font-sans); font-size: 10px;
+      letter-spacing: 0.15em; text-transform: uppercase; color: var(--color-muted); margin-bottom: 8px;
+    }
+    .field input[type="date"], .field input[type="text"], .field textarea {
+      width: 100%; padding: 12px 16px; border: 1px solid var(--color-divider); border-radius: var(--radius-sm);
+      background: var(--color-white); font-family: var(--font-serif); font-size: var(--text-base);
+      font-weight: 300; color: var(--color-ink); outline: none; transition: border-color 0.2s; appearance: none;
+    }
+    .field input:focus, .field textarea:focus { border-color: var(--color-sand); }
+    .field input.filled { border-color: var(--color-ink); }
+    .field textarea { resize: vertical; }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+    .field-row.full { grid-template-columns: 1fr; }
+
+    /* Venue cards */
+    .venue-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    .venue-card {
+      border: 1px solid var(--color-divider); border-radius: var(--radius-sm); padding: 24px 20px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: var(--transition); background: var(--color-white); min-height: 80px;
+    }
+    .venue-card:hover { border-color: var(--color-sand); background: var(--color-sand-pale); }
+    .venue-card.selected { border-color: var(--color-ink); background: var(--color-ink); }
+    .venue-card img { display: none; }
+    .venue-card-name {
+      font-family: var(--font-display); font-weight: 500; font-size: 1.2rem;
+      color: var(--color-ink); text-align: center; line-height: 1.15; transition: color 0.2s;
+    }
+    .venue-card.selected .venue-card-name { color: var(--color-white); }
+    .venue-card-sub { display: none; }
+
+    /* Guests slider */
+    .guests-display { font-family: var(--font-display); font-size: 3rem; font-weight: 500; color: var(--color-ink); line-height: 1; margin-bottom: 4px; }
+    .guests-sub { font-family: var(--font-sans); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-muted); margin-bottom: 16px; }
+    input[type="range"] { width: 100%; height: 2px; -webkit-appearance: none; appearance: none; background: var(--color-divider); border-radius: 2px; outline: none; cursor: pointer; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--color-ink); cursor: pointer; border: 2px solid white; box-shadow: 0 0 0 1px var(--color-ink); }
+    .range-labels { display: flex; justify-content: space-between; margin-top: 8px; font-family: var(--font-sans); font-size: 9px; letter-spacing: 0.1em; color: var(--color-muted); }
+
+    /* Toggle */
+    .toggle-group { display: flex; }
+    .toggle-btn {
+      flex: 1; padding: 11px 20px; border: 1px solid var(--color-divider); background: var(--color-white);
+      font-family: var(--font-sans); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--color-muted); cursor: pointer; transition: var(--transition);
+    }
+    .toggle-btn:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+    .toggle-btn:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-left: -1px; }
+    .toggle-btn.active { background: var(--color-ink); border-color: var(--color-ink); color: var(--color-white); }
+
+    /* Extra toggles */
+    .extra-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0; border-bottom: 1px solid var(--color-divider);
+    }
+    .extra-item:last-child { border-bottom: none; }
+    .extra-info { flex: 1; }
+    .extra-label { font-family: var(--font-serif); font-size: 15px; font-weight: 300; color: var(--color-ink); }
+    .extra-price { font-family: var(--font-serif); font-size: 13px; color: var(--color-muted); margin-top: 2px; }
+    .extra-badge {
+      font-family: var(--font-sans); font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 3px 7px; border-radius: 2px; margin-left: 8px; vertical-align: middle;
+    }
+    .badge-mandatory { background: rgba(28,28,26,0.08); color: var(--color-body); }
+    .extra-toggle { display: flex; gap: 0; flex-shrink: 0; margin-left: 16px; }
+    .extra-toggle .toggle-btn { padding: 8px 14px; font-size: 9px; }
+
+    /* Info strip */
+    .info-strip { padding: 14px 18px; background: var(--color-sand-pale); border-radius: var(--radius-sm); display: flex; gap: 28px; flex-wrap: wrap; margin-top: 4px; }
+    .info-strip-item {}
+    .info-strip-label { font-family: var(--font-sans); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--color-muted); margin-bottom: 2px; }
+    .info-strip-value { font-family: var(--font-serif); font-size: 15px; color: var(--color-ink); }
+
+    /* Alert */
+    .alert { padding: 12px 16px; border-radius: var(--radius-sm); font-family: var(--font-serif); font-size: 13px; font-style: italic; line-height: 1.5; margin-top: 16px; }
+    .alert-warn { background: #fdf6ec; color: #8a6020; border-left: 2px solid #cda050; }
+    .alert-error { background: #fdf0ef; color: #a03030; border-left: 2px solid #c05050; }
+    .alert-info { background: var(--color-sand-pale); color: var(--color-muted); border-left: 2px solid var(--color-sand); }
+
+    /* ── Summary panel ── */
+    .summary-panel {
+      background: var(--color-sand-pale); padding: 48px 32px 80px; position: sticky; top: 0;
+      height: 100vh; overflow-y: auto; display: flex; flex-direction: column;
+    }
+    .summary-logo { display: none; }
+    .summary-logo-placeholder { height: 24px; margin-bottom: 28px; }
+    .summary-venue-name {
+      font-family: var(--font-display); font-weight: 500; font-size: 1.5rem;
+      color: var(--color-ink); line-height: 1.1; margin-bottom: 28px; min-height: 28px;
+    }
+    .s-label { font-family: var(--font-sans); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-muted); margin-bottom: 5px; }
+    .s-date { font-family: var(--font-serif); font-style: italic; font-weight: 300; font-size: var(--text-lg); color: var(--color-ink); margin-bottom: 28px; min-height: 26px; }
+    .s-divider { height: 1px; background: var(--color-divider); margin: 16px 0; }
+
+    .line-item { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--color-divider); }
+    .line-item:last-child { border-bottom: none; }
+    .li-left { flex: 1; }
+    .li-label { font-family: var(--font-serif); font-weight: 300; font-size: 15px; color: var(--color-body); }
+    .li-detail { font-family: var(--font-sans); font-size: 9px; letter-spacing: 0.09em; color: var(--color-muted); margin-top: 2px; }
+    .li-mandatory-tag { font-family: var(--font-sans); font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-muted); margin-left: 6px; }
+    .li-amount { font-family: var(--font-serif); font-weight: 400; font-size: 15px; color: var(--color-ink); white-space: nowrap; }
+    .li-muted .li-label, .li-muted .li-amount { color: var(--color-muted); font-size: 13px; }
+
+    .penalty-line { padding: 10px 0; border-bottom: 1px solid var(--color-divider); }
+    .penalty-label { font-family: var(--font-serif); font-size: 13px; font-style: italic; color: #a05030; }
+    .penalty-amount { font-family: var(--font-serif); font-size: 13px; color: #a05030; white-space: nowrap; }
+
+    .total-block { margin-top: 20px; padding-top: 20px; }
+    .total-label { font-family: var(--font-sans); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-muted); margin-bottom: 6px; }
+    .total-amount { font-family: var(--font-display); font-size: 2.6rem; font-weight: 500; color: var(--color-ink); line-height: 1; }
+    .total-per-person { font-family: var(--font-serif); font-style: italic; font-size: 13px; color: var(--color-muted); margin-top: 5px; }
+
+    .summary-note { font-family: var(--font-serif); font-style: italic; font-size: 12px; color: var(--color-muted); line-height: 1.5; margin-top: 16px; }
+
+    .empty-state { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; padding: 32px 0; }
+    .empty-state p { font-family: var(--font-serif); font-style: italic; font-size: var(--text-base); color: var(--color-muted); font-weight: 300; line-height: 1.6; }
+
+    .export-btn {
+      display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+      padding: 14px 20px; background: var(--color-ink); color: var(--color-white); border: none;
+      border-radius: var(--radius-sm); font-family: var(--font-sans); font-size: 10px;
+      letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; transition: var(--transition); margin-top: 24px;
+    }
+    .export-btn:hover { background: #2a2a28; transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .export-btn:disabled { background: var(--color-disabled); cursor: not-allowed; transform: none; box-shadow: none; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+
+// ================================================================
+//  TAULES DE PREUS — Editar aquí per configurar tarifes
+//  Estructura: priceMatrix[any][diaDeLaSetmana] = llista de { months, price, minGuests }
+//  diaDeLaSetmana: 0=Diumenge, 1=Dl, 2=Dm, 3=Dc, 4=Dj, 5=Dv, 6=Ds
+//  extras[any] = llista de { id, label, price, optional }
+//    optional: true = el client pot triar; false = sempre inclòs (obligatori)
+//  minimumPenaltyPerPerson: preu/persona cobrat per sota del mínim
+// ================================================================
+
+const PRICE_CONFIG = {
+
+  vatRate: 0.10,  // IVA (10%)
+
+  venues: {
+
+    // ────────────────────────────────────────────────────────────
+    // Dl–Dj (dies 1–4) sempre amb els mateixos preus i mínims que el Diumenge (dia 0)
+    'mas-vivencs': {
+      minimumPenaltyPerPerson: 75,
+      priceMatrix: {
+        2026: {
+          6: [ // Dissabte
+            { months: [6,7,9,10], price: 154, minGuests: 100 },
+            { months: [5,8,11],   price: 154, minGuests: 80  },
+            { months: [4],        price: 142, minGuests: 35  },
+            { months: [1,2,3,12], price: 129, minGuests: 35  },
+          ],
+          5: [ // Divendres
+            { months: [6,7,9,10],      price: 142, minGuests: 60 },
+            { months: [5,8],           price: 142, minGuests: 35 },
+            { months: [1,2,3,4,11,12], price: 129, minGuests: 35 },
+          ],
+          0: [ // Diumenge + Dl–Dj (dies 1–4, afegits al final)
+            { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 },
+          ],
+          1: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
+          2: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
+          3: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
+          4: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
+        },
+        2027: {
+          6: [ // Dissabte
+            { months: [6,7,9,10], price: 154, minGuests: 100 },
+            { months: [5,8,11],   price: 154, minGuests: 80  },
+            { months: [4],        price: 144, minGuests: 60  },
+            { months: [1,2,3,12], price: 134, minGuests: 35  },
+          ],
+          5: [ // Divendres
+            { months: [6,7,9,10],      price: 144, minGuests: 60 },
+            { months: [5,8],           price: 144, minGuests: 35 },
+            { months: [1,2,3,4,11,12], price: 134, minGuests: 35 },
+          ],
+          0: [ // Diumenge + Dl–Dj
+            { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 },
+          ],
+          1: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
+          2: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
+          3: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
+          4: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
+        },
+      },
+      extras: {
+        2026: [
+          { id: 'ceremony',     label: 'Cerimònia',     price: 1190, optional: true  },
+          { id: 'dj',           label: 'DJ',             price: 1195, optional: false },
+          { id: 'bridal-suite', label: 'Suite Nupcial',  price: 290,  optional: true  },
+        ],
+        2027: [
+          { id: 'ceremony',           label: 'Cerimònia',                price: 1740, optional: true  },
+          { id: 'bridal-suite',       label: 'Suite Nupcial',            price: 295,  optional: true  },
+          { id: 'essential-services', label: 'Quota serveis essencials', price: 890,  optional: false },
+          { id: 'dj',                 label: 'DJ',                       price: 1250, optional: false },
+        ],
+      },
+    },
+
+    // ────────────────────────────────────────────────────────────
+    'castell-de-tous': {
+      minimumPenaltyPerPerson: 100,
+      priceMatrix: {
+        2026: {
+          6: [ // Dissabte
+            { months: [6,7,9,10], price: 160, minGuests: 80 },
+            { months: [5,8,11],   price: 160, minGuests: 60 },
+            { months: [4],        price: 147, minGuests: 35 },
+            { months: [1,2,3,12], price: 135, minGuests: 35 },
+          ],
+          5: [ // Divendres
+            { months: [6,7,9,10],      price: 147, minGuests: 45 },
+            { months: [5,8],           price: 147, minGuests: 35 },
+            { months: [1,2,3,4,11,12], price: 135, minGuests: 35 },
+          ],
+          0: [ // Diumenge + Dl–Dj
+            { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 135, minGuests: 35 },
+          ],
+          1: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 135, minGuests: 35 } ],
+          2: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 135, minGuests: 35 } ],
+          3: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 135, minGuests: 35 } ],
+          4: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 135, minGuests: 35 } ],
+        },
+        2027: {
+          6: [ // Dissabte
+            { months: [6,7,9,10], price: 160, minGuests: 80 },
+            { months: [5,8,11],   price: 160, minGuests: 60 },
+            { months: [4],        price: 150, minGuests: 45 },
+            { months: [1,2,3,12], price: 140, minGuests: 35 },
+          ],
+          5: [ // Divendres
+            { months: [6,7,9,10],      price: 150, minGuests: 45 },
+            { months: [5,8],           price: 150, minGuests: 35 },
+            { months: [1,2,3,4,11,12], price: 140, minGuests: 35 },
+          ],
+          0: [ // Diumenge + Dl–Dj
+            { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 140, minGuests: 35 },
+          ],
+          1: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 140, minGuests: 35 } ],
+          2: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 140, minGuests: 35 } ],
+          3: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 140, minGuests: 35 } ],
+          4: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 140, minGuests: 35 } ],
+        },
+      },
+      extras: {
+        2026: [
+          { id: 'ceremony',          label: 'Cerimònia',          price: 1690, optional: true  },
+          { id: 'dj',                label: 'DJ',                  price: 1195, optional: false },
+          { id: 'banquet-exterior',  label: 'Banquet a l\'exterior', price: 2500, optional: true  },
+        ],
+        2027: [
+          { id: 'ceremony',          label: 'Cerimònia',                price: 1740, optional: true  },
+          { id: 'essential-services',label: 'Quota serveis essencials', price: 1490, optional: false },
+          { id: 'dj',                label: 'DJ',                       price: 1250, optional: false },
+          { id: 'banquet-exterior',  label: 'Banquet a l\'exterior',    price: 2500, optional: true  },
+        ],
+      },
+    },
+
+    // ────────────────────────────────────────────────────────────
+    'can-macia': {
+      minimumPenaltyPerPerson: 75,
+      priceMatrix: {
+        2026: {
+          6: [ // Dissabte
+            { months: [6,7,9,10], price: 154, minGuests: 120 },
+            { months: [5,8,11],   price: 154, minGuests: 80  },
+            { months: [4],        price: 142, minGuests: 35  },
+            { months: [1,2,3,12], price: 129, minGuests: 35  },
+          ],
+          5: [ // Divendres
+            { months: [6,7,9,10],      price: 142, minGuests: 60 },
+            { months: [5,8],           price: 142, minGuests: 35 },
+            { months: [1,2,3,4,11,12], price: 129, minGuests: 35 },
+          ],
+          0: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
+          1: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
+          2: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
+          3: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
+          4: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
+        },
+        2027: {
+          6: [ // Dissabte
+            { months: [6,7,9,10], price: 154, minGuests: 120 },
+            { months: [5,8,11],   price: 154, minGuests: 80  },
+            { months: [4],        price: 144, minGuests: 60  },
+            { months: [1,2,3,12], price: 134, minGuests: 35  },
+          ],
+          5: [ // Divendres
+            { months: [6,7,9,10],      price: 144, minGuests: 60 },
+            { months: [5,8],           price: 144, minGuests: 35 },
+            { months: [1,2,3,4,11,12], price: 134, minGuests: 35 },
+          ],
+          0: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
+          1: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
+          2: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
+          3: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
+          4: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
+        },
+      },
+      extras: {
+        2026: [
+          { id: 'ceremony',         label: 'Cerimònia',          price: 1190, optional: true  },
+          { id: 'dj',               label: 'DJ',                  price: 1195, optional: false },
+          // Allotjament: obligatori els dissabtes de Maig–Octubre, opcional la resta
+          { id: 'accommodation',    label: 'Allotjament',         price: 1190, optional: true,
+            mandatoryWhen: (dow, month) => dow === 6 && [5,6,7,8,9,10].includes(month) },
+          // Banquet exterior: 10€/persona, mínim 1500€
+          { id: 'banquet-exterior', label: "Banquet a l'exterior", pricePerPerson: 10, minPrice: 1500, optional: true },
+        ],
+        2027: [
+          { id: 'ceremony',           label: 'Cerimònia',                price: 1740, optional: true  },
+          { id: 'essential-services', label: 'Quota serveis essencials', price: 890,  optional: false },
+          { id: 'dj',                 label: 'DJ',                       price: 1250, optional: false },
+          { id: 'accommodation',      label: 'Allotjament',              price: 1290, optional: true,
+            mandatoryWhen: (dow, month) => dow === 6 && [5,6,7,8,9,10].includes(month) },
+          { id: 'banquet-exterior',   label: "Banquet a l'exterior",     pricePerPerson: 10, minPrice: 1500, optional: true },
+        ],
+      },
+    },
+
+    // ────────────────────────────────────────────────────────────
+    'ca-nalzina': {
+      minimumPenaltyPerPerson: 75,
+      priceMatrix: {
+        2026: {
+          6: [ // Dissabte
+            { months: [6,7,9,10], price: 158, minGuests: 120 },
+            { months: [5,8,11],   price: 158, minGuests: 80  },
+            { months: [4],        price: 146, minGuests: 35  },
+            { months: [1,2,3,12], price: 133, minGuests: 35  },
+          ],
+          5: [ // Divendres
+            { months: [6,7,9,10],      price: 146, minGuests: 60 },
+            { months: [5,8],           price: 146, minGuests: 35 },
+            { months: [1,2,3,4,11,12], price: 133, minGuests: 35 },
+          ],
+          0: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 133, minGuests: 35 } ],
+          1: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 133, minGuests: 35 } ],
+          2: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 133, minGuests: 35 } ],
+          3: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 133, minGuests: 35 } ],
+          4: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 133, minGuests: 35 } ],
+        },
+        2027: {
+          6: [ // Dissabte
+            { months: [6,7,9,10], price: 158, minGuests: 120 },
+            { months: [5,8,11],   price: 158, minGuests: 80  },
+            { months: [4],        price: 148, minGuests: 60  },
+            { months: [1,2,3,12], price: 138, minGuests: 35  },
+          ],
+          5: [ // Divendres
+            { months: [6,7,9,10],      price: 148, minGuests: 60 },
+            { months: [5,8],           price: 148, minGuests: 35 },
+            { months: [1,2,3,4,11,12], price: 138, minGuests: 35 },
+          ],
+          0: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 138, minGuests: 35 } ],
+          1: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 138, minGuests: 35 } ],
+          2: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 138, minGuests: 35 } ],
+          3: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 138, minGuests: 35 } ],
+          4: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 138, minGuests: 35 } ],
+        },
+      },
+      extras: {
+        2026: [
+          { id: 'ceremony',      label: 'Cerimònia',         price: 1690, optional: true  },
+          { id: 'dj',            label: 'DJ',                 price: 1195, optional: false },
+          { id: 'accommodation', label: 'Allotjament',        price: 1290, optional: true,
+            mandatoryWhen: (dow, month) => dow === 6 && [5,6,7,8,9,10].includes(month) },
+          { id: 'garden-aperitif', label: "Aperitiu al jardí", pricePerPerson: 10, minPrice: 1000, optional: true },
+        ],
+        2027: [
+          { id: 'ceremony',           label: 'Cerimònia',                price: 1740, optional: true  },
+          { id: 'essential-services', label: 'Quota serveis essencials', price: 1490, optional: false },
+          { id: 'dj',                 label: 'DJ',                       price: 1250, optional: false },
+          { id: 'accommodation',      label: 'Allotjament',              price: 1390, optional: true,
+            mandatoryWhen: (dow, month) => dow === 6 && [5,6,7,8,9,10].includes(month) },
+          { id: 'garden-aperitif',    label: "Aperitiu al jardí",        pricePerPerson: 10, minPrice: 1000, optional: true },
+        ],
+      },
+    },
+  },
+};
+
+// ================================================================
+//  FI TAULES DE PREUS
+// ================================================================
+
+const VENUES = [
+  { id: 'mas-vivencs',     name: 'Mas Vivencs',      logo: 'assets/logo-mas-vivencs.png',      type: 'Mas Rural'        },
+  { id: 'castell-de-tous', name: 'Castell de Tous',  logo: 'assets/logo-castell-de-tous.png',  type: 'Castell Històric' },
+  { id: 'can-macia',       name: 'Can Macià',         logo: 'assets/logo-can-macia.png',        type: 'Masia Rural'      },
+  { id: 'ca-nalzina',      name: "Ca n'Alzina",       logo: 'assets/logo-ca-nalzina.png',       type: 'Masia Rural'      },
+];
+
+const MONTHS_CA = ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
+const DAYS_CA   = ['Diumenge','Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte'];
+const DAYS_SHORT = ['Dg','Dl','Dm','Dc','Dj','Dv','Ds'];
+
+function eur(n) {
+  return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
+}
+
+// ── Translations ─────────────────────────────────────────────────
+const T = {
+  ca: {
+    exportBtn:       'Exportar PDF',
+    weddingDate:     'Data de la boda',
+    pending:         '— pendent —',
+    emptyState:      'Omple la finca, la data i el nombre de convidats per veure el pressupost en temps real.',
+    menuService:     'Menú i servei',
+    guestsX:         (n, ppp) => `${n} convidats × ${eur(ppp)}/pers. + IVA`,
+    minSupplement:   'Suplement mínim de convidats',
+    minDetail:       (short, min, pen) => `${short} pers. per sota el mínim (${min}) × ${eur(pen)}`,
+    mandatory:       'obligatori',
+    subtotal:        'Subtotal',
+    vat:             'IVA',
+    totalLabel:      'Total estimat',
+    perGuest:        pp => `${eur(pp)} per convidat`,
+    minWarn:         (min, pen) => `Per sota del mínim de ${min} convidats. S'aplica suplement de ${eur(pen)}/pers.`,
+    note:            'Pressupost orientatiu i no vinculant.',
+    // PDF
+    pdfTitle:        'Pressupost Estimat',
+    refLabel:        'Referència',
+    coupleLabel:     'La Parella',
+    dateLabel:       'Data de la Boda',
+    venueLabel:      'Finca',
+    guestsLabel:     'Convidats',
+    guestsUnit:      n => `${n} persones`,
+    detailLabel:     'Detall del Pressupost',
+    conceptCol:      'Concepte',
+    amountCol:       'Import',
+    pdfMenuDetail:   (n, ppp) => `${n} convidats × ${eur(ppp)}/pers.`,
+    pdfMinDetail:    (short, pen) => `${short} persones × ${eur(pen)}`,
+    pdfMandatory:    'obligatori',
+    footerNote:      'Pressupost orientatiu i no vinculant.',
+    locale:          'ca-ES',
+    months:          ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'],
+  },
+  es: {
+    exportBtn:       'Exportar PDF',
+    weddingDate:     'Fecha de la boda',
+    pending:         '— pendiente —',
+    emptyState:      'Rellena la finca, la fecha y el número de invitados para ver el presupuesto en tiempo real.',
+    menuService:     'Menú y servicio',
+    guestsX:         (n, ppp) => `${n} invitados × ${eur(ppp)}/pers. + IVA`,
+    minSupplement:   'Suplemento mínimo de invitados',
+    minDetail:       (short, min, pen) => `${short} pers. por debajo del mínimo (${min}) × ${eur(pen)}`,
+    mandatory:       'obligatorio',
+    subtotal:        'Subtotal',
+    vat:             'IVA',
+    totalLabel:      'Total estimado',
+    perGuest:        pp => `${eur(pp)} por invitado`,
+    minWarn:         (min, pen) => `Por debajo del mínimo de ${min} invitados. Se aplica suplemento de ${eur(pen)}/pers.`,
+    note:            'Presupuesto orientativo y no vinculante.',
+    // PDF
+    pdfTitle:        'Presupuesto Estimado',
+    refLabel:        'Referencia',
+    coupleLabel:     'La Pareja',
+    dateLabel:       'Fecha de la Boda',
+    venueLabel:      'Finca',
+    guestsLabel:     'Invitados',
+    guestsUnit:      n => `${n} personas`,
+    detailLabel:     'Detalle del Presupuesto',
+    conceptCol:      'Concepto',
+    amountCol:       'Importe',
+    pdfMenuDetail:   (n, ppp) => `${n} invitados × ${eur(ppp)}/pers.`,
+    pdfMinDetail:    (short, pen) => `${short} personas × ${eur(pen)}`,
+    pdfMandatory:    'obligatorio',
+    footerNote:      'Presupuesto orientativo y no vinculante.',
+    locale:          'es-ES',
+    months:          ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+  },
+  en: {
+    exportBtn:       'Export PDF',
+    weddingDate:     'Wedding date',
+    pending:         '— pending —',
+    emptyState:      'Fill in the venue, date and number of guests to see the live estimate.',
+    menuService:     'Menu & service',
+    guestsX:         (n, ppp) => `${n} guests × ${eur(ppp)}/person + VAT`,
+    minSupplement:   'Minimum guests supplement',
+    minDetail:       (short, min, pen) => `${short} persons below minimum (${min}) × ${eur(pen)}`,
+    mandatory:       'mandatory',
+    subtotal:        'Subtotal',
+    vat:             'VAT',
+    totalLabel:      'Estimated total',
+    perGuest:        pp => `${eur(pp)} per guest`,
+    minWarn:         (min, pen) => `Below minimum of ${min} guests. A supplement of ${eur(pen)}/person applies.`,
+    note:            'Indicative and non-binding estimate.',
+    // PDF
+    pdfTitle:        'Estimated Budget',
+    refLabel:        'Reference',
+    coupleLabel:     'The Couple',
+    dateLabel:       'Wedding Date',
+    venueLabel:      'Venue',
+    guestsLabel:     'Guests',
+    guestsUnit:      n => `${n} people`,
+    detailLabel:     'Budget Details',
+    conceptCol:      'Item',
+    amountCol:       'Amount',
+    pdfMenuDetail:   (n, ppp) => `${n} guests × ${eur(ppp)}/person`,
+    pdfMinDetail:    (short, pen) => `${short} persons × ${eur(pen)}`,
+    pdfMandatory:    'mandatory',
+    footerNote:      'Indicative and non-binding estimate.',
+    locale:          'en-GB',
+    months:          ['January','February','March','April','May','June','July','August','September','October','November','December'],
+  },
+};
+
+
+function lookupPrice(venueId, year, month, dow) {
+  const v = PRICE_CONFIG.venues[venueId];
+  if (!v || !v.priceMatrix) return null;
+  // Find closest year ≤ selected
+  const years = Object.keys(v.priceMatrix).map(Number).sort((a,b) => a-b);
+  if (!years.length) return null;
+  let usedYear = years[0];
+  for (const y of years) { if (y <= year) usedYear = y; }
+  const dayMatrix = v.priceMatrix[usedYear];
+  if (!dayMatrix || !dayMatrix[dow]) return null;
+  const row = dayMatrix[dow].find(r => r.months.includes(month));
+  return row ? { ...row, year: usedYear } : null;
+}
+
+function getExtras(venueId, year) {
+  const v = PRICE_CONFIG.venues[venueId];
+  if (!v || !v.extras) return [];
+  const years = Object.keys(v.extras).map(Number).sort((a,b) => a-b);
+  if (!years.length) return [];
+  let usedYear = years[0];
+  for (const y of years) { if (y <= year) usedYear = y; }
+  return v.extras[usedYear] || [];
+}
+
+function computeQuote({ venue, date, guests, selectedExtras }) {
+  if (!venue || !date || guests < 1) return null;
+  const d = new Date(date + 'T12:00:00');
+  const year = d.getFullYear(), month = d.getMonth() + 1, dow = d.getDay();
+  const slot = lookupPrice(venue, year, month, dow);
+  if (!slot) return null;
+
+  const effectiveGuests = guests;
+  const menuBase = slot.price * effectiveGuests;
+  const shortfall = Math.max(0, slot.minGuests - guests);
+  const penaltyAmt = shortfall > 0
+    ? shortfall * (PRICE_CONFIG.venues[venue].minimumPenaltyPerPerson || 75)
+    : 0;
+
+  const allExtras = getExtras(venue, year);
+  const extrasLines = allExtras.map(e => {
+    const condMandatory = e.mandatoryWhen ? e.mandatoryWhen(dow, month) : false;
+    const isMandatory = !e.optional || condMandatory;
+    const included = isMandatory || selectedExtras[e.id] === true;
+    const computedPrice = e.pricePerPerson
+      ? Math.max(guests * e.pricePerPerson, e.minPrice || 0)
+      : (e.price || 0);
+    const priceDetail = e.pricePerPerson
+      ? `${guests} pers. × ${eur(e.pricePerPerson)} (mínim ${eur(e.minPrice)})`
+      : null;
+    return { ...e, isMandatory, condMandatory, included, computedPrice, priceDetail };
+  }).filter(e => e.included);
+
+  const extrasTotal = extrasLines.reduce((s, e) => s + e.computedPrice, 0);
+  const subtotal = menuBase + penaltyAmt + extrasTotal;
+  const vat = subtotal * PRICE_CONFIG.vatRate;
+  const total = subtotal + vat;
+
+  return {
+    year, month, dow, usedYear: slot.year,
+    pricePerPerson: slot.price, minGuests: slot.minGuests,
+    menuBase, shortfall, penaltyAmt,
+    extrasLines, extrasTotal, subtotal, vat, total,
+    perPerson: total / guests,
+  };
+}
+
+// ── Components ──────────────────────────────────────────────────
+function VenueCards({ value, onChange }) {
+  return (
+    <div className="venue-grid">
+      {VENUES.map(v => (
+        <div key={v.id} className={`venue-card ${value === v.id ? 'selected' : ''}`} onClick={() => onChange(v.id)}>
+          <span className="venue-card-name">{v.name}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Toggle({ value, onChange, options }) {
+  return (
+    <div className="toggle-group">
+      {options.map(o => (
+        <button key={o.value} className={`toggle-btn ${value === o.value ? 'active' : ''}`} onClick={() => onChange(o.value)}>
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ExtrasSection({ venueId, year, date, guests, selectedExtras, onChange }) {
+  if (!venueId || !year) return null;
+  const extras = getExtras(venueId, year);
+  if (!extras.length) return null;
+
+  const dow   = date ? new Date(date + 'T12:00:00').getDay() : null;
+  const month = date ? new Date(date + 'T12:00:00').getMonth() + 1 : null;
+
+  return (
+    <div className="form-section">
+      <div className="section-title">Serveis addicionals</div>
+      {extras.map(e => {
+        const condMandatory = e.mandatoryWhen && dow !== null ? e.mandatoryWhen(dow, month) : false;
+        const isMandatory   = !e.optional || condMandatory;
+        const priceLabel    = e.pricePerPerson
+          ? `${eur(e.pricePerPerson)}/pers. (mínim ${eur(e.minPrice)}) + IVA`
+          : `${eur(e.price || 0)} + IVA`;
+        const mandatoryLabel = condMandatory ? 'Obligatori (data sel.)' : 'Obligatori';
+
+        return (
+          <div key={e.id} className="extra-item">
+            <div className="extra-info">
+              <div className="extra-label">
+                {e.label}
+                {isMandatory && <span className="extra-badge badge-mandatory">{mandatoryLabel}</span>}
+              </div>
+              <div className="extra-price">{priceLabel}</div>
+            </div>
+            {isMandatory ? (
+              <div style={{fontSize:11, fontFamily:'var(--font-sans)', letterSpacing:'0.1em', color:'var(--color-muted)', textTransform:'uppercase', marginLeft:16}}>Inclòs</div>
+            ) : (
+              <div className="extra-toggle">
+                <button className={`toggle-btn ${selectedExtras[e.id] ? 'active' : ''}`} onClick={() => onChange(e.id, true)}>Sí</button>
+                <button className={`toggle-btn ${!selectedExtras[e.id] ? 'active' : ''}`} onClick={() => onChange(e.id, false)}>No</button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function DateInfoStrip({ venueId, date }) {
+  if (!venueId || !date) return null;
+  const d = new Date(date + 'T12:00:00');
+  const year = d.getFullYear(), month = d.getMonth() + 1, dow = d.getDay();
+  const slot = lookupPrice(venueId, year, month, dow);
+  const unavailable = !slot && Object.keys(PRICE_CONFIG.venues[venueId]?.priceMatrix || {}).length > 0;
+  const notConfigured = Object.keys(PRICE_CONFIG.venues[venueId]?.priceMatrix || {}).length === 0;
+
+  if (notConfigured) return (
+    <div className="alert alert-info">Preus d'aquesta finca pendents de configurar.</div>
+  );
+  if (unavailable) return (
+    <div className="alert alert-error">
+      {DAYS_CA[dow]} no és un dia disponible per a {VENUES.find(v=>v.id===venueId)?.name}. Tria divendres, dissabte o diumenge.
+    </div>
+  );
+  if (!slot) return null;
+
+  return (
+    <div>
+      <div className="info-strip">
+        <div className="info-strip-item">
+          <div className="info-strip-label">Dia</div>
+          <div className="info-strip-value">{DAYS_CA[dow]}</div>
+        </div>
+        <div className="info-strip-item">
+          <div className="info-strip-label">Mes</div>
+          <div className="info-strip-value">{MONTHS_CA[month-1]}</div>
+        </div>
+        <div className="info-strip-item">
+          <div className="info-strip-label">Preu/persona</div>
+          <div className="info-strip-value">{eur(slot.price)} + IVA</div>
+        </div>
+        <div className="info-strip-item">
+          <div className="info-strip-label">Mínim finca</div>
+          <div className="info-strip-value">{slot.minGuests} convidats</div>
+        </div>
+      </div>
+      {slot.year < year && (
+        <div className="alert alert-info" style={{marginTop:12}}>
+          Preus {slot.year} aplicats — tarifes {year} encara no disponibles.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SummaryPanel({ form, quote, lang }) {
+  const t = T[lang];
+  const venue = VENUES.find(v => v.id === form.venue);
+  const dateObj = form.date ? new Date(form.date + 'T12:00:00') : null;
+  const dateStr = dateObj
+    ? `${dateObj.getDate()} de ${t.months[dateObj.getMonth()].toLowerCase()} de ${dateObj.getFullYear()}`
+    : null;
+  const ready = form.venue && form.date && form.guests >= 1 && quote;
+
+  function handleExport() {
+    const coupleStr = form.coupleName || t.coupleLabel;
+    const refNum = `UAUU-${new Date().getFullYear()}-${String(Math.floor(Math.random()*9000)+1000)}`;
+    const today = new Date().toLocaleDateString(t.locale, { day:'numeric', month:'long', year:'numeric' });
+    const w = window.open('', '_blank');
+    w.document.write(pdfHTML({ form, quote, venue, dateStr, coupleStr, refNum, today, t }));
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 700);
+  }
+
+  return (
+    <div className="summary-panel">
+      <div className="summary-venue-name">
+        {venue ? venue.name : <span style={{opacity:0}}>—</span>}
+      </div>
+
+      <div className="s-label">{t.weddingDate}</div>
+      <div className="s-date">
+        {dateStr || <span style={{color:'var(--color-muted)'}}>{t.pending}</span>}
+      </div>
+
+      {!ready && (
+        <div className="empty-state">
+          <p>{t.emptyState}</p>
+        </div>
+      )}
+
+      {ready && (
+        <>
+          <div style={{flex:1}}>
+            <div className="line-item">
+              <div className="li-left">
+                <div className="li-label">{t.menuService}</div>
+                <div className="li-detail">{t.guestsX(form.guests, quote.pricePerPerson)}</div>
+              </div>
+              <div className="li-amount">{eur(quote.menuBase)}</div>
+            </div>
+
+            {quote.shortfall > 0 && (
+              <div className="line-item" style={{display:'flex',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px solid var(--color-divider)'}}>
+                <div className="li-left">
+                  <div className="li-label" style={{color:'#a05030'}}>{t.minSupplement}</div>
+                  <div className="li-detail" style={{color:'#c07050'}}>{t.minDetail(quote.shortfall, quote.minGuests, PRICE_CONFIG.venues[form.venue].minimumPenaltyPerPerson)}</div>
+                </div>
+                <div className="li-amount" style={{color:'#a05030'}}>{eur(quote.penaltyAmt)}</div>
+              </div>
+            )}
+
+            {quote.extrasLines.map(e => (
+              <div key={e.id} className="line-item">
+                <div className="li-left">
+                  <div className="li-label">{e.label} {e.isMandatory && <span className="li-mandatory-tag">{t.mandatory}</span>}</div>
+                  {e.priceDetail && <div className="li-detail">{e.priceDetail}</div>}
+                </div>
+                <div className="li-amount">{eur(e.computedPrice)}</div>
+              </div>
+            ))}
+
+            <div className="s-divider" />
+
+            <div className="line-item li-muted">
+              <div className="li-left"><div className="li-label">{t.subtotal}</div></div>
+              <div className="li-amount">{eur(quote.subtotal)}</div>
+            </div>
+            <div className="line-item li-muted">
+              <div className="li-left"><div className="li-label">{t.vat} ({Math.round(PRICE_CONFIG.vatRate*100)}%)</div></div>
+              <div className="li-amount">{eur(quote.vat)}</div>
+            </div>
+
+            <div className="s-divider" />
+
+            <div className="total-block">
+              <div className="total-label">{t.totalLabel}</div>
+              <div className="total-amount">{eur(quote.total)}</div>
+              <div className="total-per-person">{t.perGuest(quote.perPerson)}</div>
+            </div>
+
+            {quote.shortfall > 0 && (
+              <div className="alert alert-warn" style={{marginTop:16}}>
+                {t.minWarn(quote.minGuests, PRICE_CONFIG.venues[form.venue].minimumPenaltyPerPerson)}
+              </div>
+            )}
+
+            <p className="summary-note">{t.note}</p>
+          </div>
+
+          <button className="export-btn" onClick={handleExport}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            {t.exportBtn}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── PDF template ─────────────────────────────────────────────────
+function pdfHTML({ form, quote, venue, dateStr, coupleStr, refNum, today, t }) {
+  const vatPct = Math.round(PRICE_CONFIG.vatRate * 100);
+  const linesRows = [
+    `<tr><td class="td-l">${t.menuService}<div class="td-sub">${t.pdfMenuDetail(form.guests, quote.pricePerPerson)}</div></td><td class="td-r">${eur(quote.menuBase)}</td></tr>`,
+    ...(quote.shortfall > 0 ? [`<tr><td class="td-l" style="color:#a05030">${t.minSupplement}<div class="td-sub" style="color:#c07050">${t.pdfMinDetail(quote.shortfall, PRICE_CONFIG.venues[form.venue].minimumPenaltyPerPerson)}</div></td><td class="td-r" style="color:#a05030">${eur(quote.penaltyAmt)}</td></tr>`] : []),
+    ...quote.extrasLines.map(e => `<tr><td class="td-l">${e.label}${e.isMandatory ? ` <span style="font-size:10px;color:#999;font-style:normal">${t.pdfMandatory}</span>` : ''}${e.priceDetail ? `<div class="td-sub">${e.priceDetail}</div>` : ''}</td><td class="td-r">${eur(e.computedPrice)}</td></tr>`),
+  ].join('');
+
+  return `<!DOCTYPE html><html lang="ca"><head><meta charset="UTF-8"/>
+<title>${t.pdfTitle} ${coupleStr} — UAUU</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Cormorant Garamond',Georgia,serif;font-weight:300;color:#1c1c1a;background:#fff;-webkit-font-smoothing:antialiased}
+.wrap{max-width:620px;margin:0 auto;padding:64px 60px 80px}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px}
+.brand{font-family:system-ui,sans-serif;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:#7e8c8d;margin-bottom:6px}
+.title-pdf{font-size:26px;font-weight:300;font-style:italic}
+.ref-label{font-family:system-ui,sans-serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#7e8c8d;margin-bottom:3px;text-align:right}
+.ref-val{font-size:13px;font-weight:400;text-align:right}
+.ref-date{font-family:system-ui,sans-serif;font-size:10px;color:#7e8c8d;margin-top:3px;text-align:right}
+.divider{height:1px;background:#eaeced;margin:32px 0}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px 48px;margin-bottom:40px}
+.meta-label{font-family:system-ui,sans-serif;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:#7e8c8d;margin-bottom:5px}
+.meta-val{font-size:17px;font-weight:400}
+.meta-val-i{font-size:17px;font-weight:300;font-style:italic}
+.tbl-label{font-family:system-ui,sans-serif;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:#7e8c8d;margin-bottom:10px}
+table{width:100%;border-collapse:collapse}
+th{font-family:system-ui,sans-serif;font-size:9px;letter-spacing:0.13em;text-transform:uppercase;color:#7e8c8d;font-weight:400;padding-bottom:10px;border-bottom:1px solid #1c1c1a;text-align:left}
+th:last-child{text-align:right}
+.td-l{padding:12px 0;border-bottom:1px solid #eaeced;font-size:15px;font-weight:300;color:#515856;vertical-align:top}
+.td-sub{font-family:system-ui,sans-serif;font-size:10px;color:#7e8c8d;margin-top:3px;letter-spacing:0.05em}
+.td-r{padding:12px 0;border-bottom:1px solid #eaeced;text-align:right;font-size:15px;font-weight:400;white-space:nowrap;vertical-align:top}
+.td-muted{font-size:13px;color:#7e8c8d;padding:8px 0;border-bottom:1px solid #eaeced}
+.td-muted-r{font-size:13px;color:#7e8c8d;padding:8px 0;border-bottom:1px solid #eaeced;text-align:right}
+.total-td{padding:20px 0;border-top:2px solid #1c1c1a}
+.t-label{font-family:system-ui,sans-serif;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:#7e8c8d;margin-bottom:4px}
+.t-amount{font-size:30px;font-weight:300}
+.t-pp{font-size:12px;font-style:italic;color:#7e8c8d;margin-top:3px}
+.notes{margin-top:28px;padding:18px;background:#f5f2ed;border-radius:4px;font-size:13px;font-style:italic;color:#515856;line-height:1.6}
+.footer{margin-top:52px;padding-top:20px;border-top:1px solid #eaeced;display:flex;justify-content:space-between;align-items:flex-end}
+.footer-l{font-family:system-ui,sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#7e8c8d;margin-bottom:4px}
+.footer-v{font-size:12px;font-style:italic;color:#7e8c8d}
+.footer-r{font-family:system-ui,sans-serif;font-size:9px;color:#7e8c8d;text-align:right;line-height:1.6}
+@page{size:A4;margin:0}
+@media print{html,body{width:210mm}}
+</style></head><body>
+<div class="wrap">
+  <div class="hdr">
+    <div><div class="brand">UAUU weddings &amp; events</div><div class="title-pdf">${t.pdfTitle}</div></div>
+    <div><div class="ref-label">${t.refLabel}</div><div class="ref-val">${refNum}</div><div class="ref-date">${today}</div></div>
+  </div>
+  <div class="divider"></div>
+  <div class="meta-grid">
+    <div><div class="meta-label">${t.coupleLabel}</div><div class="meta-val">${coupleStr}</div></div>
+    <div><div class="meta-label">${t.dateLabel}</div><div class="meta-val-i">${dateStr || '—'}</div></div>
+    <div><div class="meta-label">${t.venueLabel}</div><div class="meta-val">${venue?.name || '—'}</div></div>
+    <div><div class="meta-label">${t.guestsLabel}</div><div class="meta-val">${t.guestsUnit(form.guests)}</div></div>
+  </div>
+  <div class="tbl-label">${t.detailLabel}</div>
+  <table>
+    <thead><tr><th>${t.conceptCol}</th><th>${t.amountCol}</th></tr></thead>
+    <tbody>
+      ${linesRows}
+      <tr><td class="td-muted">${t.subtotal}</td><td class="td-muted-r">${eur(quote.subtotal)}</td></tr>
+      <tr><td class="td-muted">${t.vat} (${vatPct}%)</td><td class="td-muted-r">${eur(quote.vat)}</td></tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td class="total-td"><div class="t-label">${t.totalLabel}</div><div class="t-amount">${eur(quote.total)}</div><div class="t-pp">${t.perGuest(quote.perPerson)}</div></td>
+        <td class="total-td"></td>
+      </tr>
+    </tfoot>
+  </table>
+  ${form.notes ? `<div class="notes">${form.notes}</div>` : ''}
+  <div class="footer">
+    <div><div class="footer-l">UAUU weddings &amp; events</div><div class="footer-v">Avda. Mestre Montaner, 44-45, Igualada (Barcelona)</div><div class="footer-v">info@uauu.cat · +34 634 438 736</div></div>
+    <div class="footer-r">${t.footerNote}</div>
+  </div>
+</div></body></html>`;
+}
+
+// ── Main App ─────────────────────────────────────────────────────
+function App() {
+  const [form, setForm] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem('uauu-v2-form') || 'null') || defaultForm(); }
+    catch { return defaultForm(); }
+  });
+  const [lang, setLang] = React.useState(() => localStorage.getItem('uauu-lang') || 'ca');
+
+  function defaultForm() {
+    return { venue: '', date: '', guests: 80, selectedExtras: {}, coupleName: '', notes: '' };
+  }
+
+  React.useEffect(() => { localStorage.setItem('uauu-v2-form', JSON.stringify(form)); }, [form]);
+  React.useEffect(() => { localStorage.setItem('uauu-lang', lang); }, [lang]);
+
+  function set(key, val) { setForm(f => ({ ...f, [key]: val })); }
+  function setExtra(id, val) { setForm(f => ({ ...f, selectedExtras: { ...f.selectedExtras, [id]: val } })); }
+
+  const dateYear = form.date ? new Date(form.date + 'T12:00:00').getFullYear() : null;
+  React.useEffect(() => { setForm(f => ({ ...f, selectedExtras: {} })); }, [form.venue, dateYear]);
+
+  const quote = React.useMemo(() => computeQuote(form), [form]);
+
+  return (
+    <div>
+      <header className="page-header">
+        <img src={(window.__resources && window.__resources.uauuLogo) || 'assets/logo-uauu-black.png'} alt="UAUU weddings & events" />
+        <div className="page-header-center">
+          <span className="page-header-label">Configurador de Pressupostos</span>
+          <div className="lang-selector">
+            {['ca','es','en'].map(l => (
+              <button key={l} className={`lang-btn ${lang === l ? 'active' : ''}`} onClick={() => setLang(l)}>
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{width:34}} />
+      </header>
+
+      <div className="app-body">
+        <div className="form-panel">
+
+          {/* Venue */}
+          <div className="form-section">
+            <div className="section-title">Finca de la boda</div>
+            <VenueCards value={form.venue} onChange={v => set('venue', v)} />
+          </div>
+
+          {/* Date & Guests */}
+          <div className="form-section">
+            <div className="section-title">Detalls de l'esdeveniment</div>
+            <div className="field-row">
+              <div className="field">
+                <label>Data de la boda</label>
+                <input type="date" value={form.date} className={form.date ? 'filled' : ''}
+                  min={`${new Date().getFullYear()}-01-01`}
+                  onChange={e => set('date', e.target.value)} />
+              </div>
+              <div className="field">
+                <label>Nombre de convidats</label>
+                <div className="guests-display">{form.guests}</div>
+                <div className="guests-sub">convidats</div>
+                <input type="range" min={10} max={400} step={5} value={form.guests}
+                  onChange={e => set('guests', Number(e.target.value))} />
+                <div className="range-labels"><span>10</span><span>400</span></div>
+              </div>
+            </div>
+            <DateInfoStrip venueId={form.venue} date={form.date} />
+          </div>
+
+          {/* Dynamic extras */}
+          <ExtrasSection
+            venueId={form.venue}
+            year={dateYear}
+            date={form.date}
+            guests={form.guests}
+            selectedExtras={form.selectedExtras}
+            onChange={setExtra}
+          />
+
+          {/* Client info */}
+          <div className="form-section">
+            <div className="section-title">Dades de la parella</div>
+            <div className="field-row full" style={{marginBottom:20}}>
+              <div className="field">
+                <label>Noms de la parella</label>
+                <input type="text" placeholder="p. ex. Anna & Marc"
+                  value={form.coupleName} className={form.coupleName ? 'filled' : ''}
+                  onChange={e => set('coupleName', e.target.value)} />
+              </div>
+            </div>
+            <div className="field-row full">
+              <div className="field">
+                <label>Notes addicionals</label>
+                <textarea rows={3} placeholder="Requisits especials, al·lèrgies, observacions..."
+                  value={form.notes} onChange={e => set('notes', e.target.value)} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <SummaryPanel form={form} quote={quote} lang={lang} />
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

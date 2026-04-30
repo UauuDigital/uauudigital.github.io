@@ -1,25 +1,32 @@
-# Configurador de Pressupostos — UAUU
+# Configurador de Pressupostos UAUU
 
-Aplicació web per a la configuració i gestió de pressupostos de casaments i events.
+Aplicació web estàtica pensada per a GitHub Pages.
 
-## 📋 Descripció
+## Estructura
 
-Aquesta és una aplicació web interactiva que permet als clients de UAUU weddings & events configurar els seus pressupostos de manera fàcil i intuïtiva.
+- `index.html`: pàgina publicada a GitHub Pages.
+- `source/pressupostos-uauu/`: codi font editable i recursos del projecte.
+- `build/pressupostos-uauu-standalone.html`: exportació d'un sol fitxer.
+- `docs/adaptacio-menu-sense-gluten.pdf`: document de suport.
 
-## 🚀 Accés
+## On editar
 
-La pàgina està disponible públicament a través de GitHub Pages.
+- Lògica i interfície principal: `source/pressupostos-uauu/index.html`
+- Estils compartits: `source/pressupostos-uauu/colors_and_type.css`
+- Component de proves: `source/pressupostos-uauu/tweaks-panel.jsx`
+- Logos i imatges: `source/pressupostos-uauu/assets/`
+- Tipografies: `source/pressupostos-uauu/fonts/`
+- Fitxers penjats o captures: `source/pressupostos-uauu/uploads/`
 
-## 💻 Tecnologia
+## GitHub Pages
 
-- HTML5
-- CSS
-- JavaScript (amb suport per a Babel)
+Si el repositori publica l'arrel, cal mantenir `index.html` al nivell principal. La resta de carpetes queden organitzades per separar publicació, documentació i font.
 
-## 📝 Autoria
+## Prova local
 
-UAUU weddings & events
+- `node serve.js`
+- `node serve.js source/pressupostos-uauu`
 
----
+## Web
 
-Per a més informació, visiteu [www.uauu.cat](https://www.uauu.cat)
+Més informació: [www.uauu.cat](https://www.uauu.cat)
