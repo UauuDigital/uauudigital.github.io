@@ -25,18 +25,27 @@ body {
 
 .page-header-side {
   min-width: 0;
+  overflow: visible;
 }
 
 .page-header-left {
   justify-self: start;
+  display: flex;
+  align-items: center;
 }
 
 .page-header-right {
   justify-self: end;
+  display: flex;
+  align-items: center;
 }
 
 .page-logo {
-  height: 10px;
+  display: block;
+  height: 50px;
+  width: auto;
+  transform: scale(2.8);
+  transform-origin: left center;
 }
 
 
