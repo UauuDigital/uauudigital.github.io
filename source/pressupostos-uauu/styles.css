@@ -747,3 +747,93 @@ input[type="range"]::-webkit-slider-thumb {
   transform: none;
   box-shadow: none;
 }
+
+/* ── Responsivitat ── */
+
+/* Ajustos per a Tabletes i Pantalles Mitjanes */
+@media (max-width: 1024px) {
+  .app-body {
+    grid-template-columns: 1fr; /* El resum passa a sota del formulari */
+  }
+
+  .form-panel {
+    border-right: none;
+    padding: 40px 32px;
+  }
+
+  .summary-panel {
+    position: static; /* Deixa d'estar fix al lateral */
+    height: auto;
+    padding: 48px 32px;
+  }
+
+  .page-logo {
+    transform: scale(2); /* Reduïm una mica l'escala del logo */
+  }
+}
+
+/* Ajustos per a Mòbils */
+@media (max-width: 768px) {
+  .page-header {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .page-header-side {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .page-logo {
+    transform: scale(1.5);
+    transform-origin: center;
+    margin: 0 auto;
+  }
+
+  .venue-grid {
+    grid-template-columns: 1fr; /* Una finca per fila */
+  }
+
+  .field-row {
+    grid-template-columns: 1fr; /* Inputs un sota l'altre */
+  }
+
+  .extra-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .extra-toggle, 
+  .extra-quantity {
+    margin-left: 0;
+    align-self: flex-start; /* Controls aliniats a l'esquerra */
+    width: 100%;
+  }
+
+  .extra-toggle .toggle-btn {
+    flex: 1;
+  }
+
+  .info-strip {
+    gap: 15px;
+    flex-direction: column;
+  }
+
+  .total-amount {
+    font-size: 2.2rem; /* Text una mica més petit per a mòbils */
+  }
+}
+
+/* Ajustos per a mòbils molt petits */
+@media (max-width: 480px) {
+  .form-panel, .summary-panel {
+    padding: 30px 20px;
+  }
+
+  .field input[type="text"].guests-input {
+    font-size: 2.2rem;
+  }
+}
