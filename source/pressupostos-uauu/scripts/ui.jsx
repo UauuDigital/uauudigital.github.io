@@ -398,15 +398,10 @@ th:last-child{text-align:right}
 function App() {
   const [form, setForm] = React.useState(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem('uauu-v2-form') || 'null');
-      return {
-        ...defaultForm(),
-        ...(saved || {}),
-        selectedExtras: (saved && saved.selectedExtras) || {},
-        extraQuantities: (saved && saved.extraQuantities) || {},
-      };
+      localStorage.removeItem('uauu-v2-form');
     }
-    catch { return defaultForm(); }
+    catch {}
+    return defaultForm();
   });
   const [lang, setLang] = React.useState(() => localStorage.getItem('uauu-lang') || 'ca');
 
@@ -414,7 +409,6 @@ function App() {
     return { venue: '', date: '', guests: 80, selectedExtras: {}, extraQuantities: {}, coupleName: '', notes: '' };
   }
 
-  React.useEffect(() => { localStorage.setItem('uauu-v2-form', JSON.stringify(form)); }, [form]);
   React.useEffect(() => { localStorage.setItem('uauu-lang', lang); }, [lang]);
 
   function set(key, val) { setForm(f => ({ ...f, [key]: val })); }
