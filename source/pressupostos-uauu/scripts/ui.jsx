@@ -1,5 +1,4 @@
-﻿// ── Components ──────────────────────────────────────────────────
-function clamp(value, min, max) {
+﻿function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
@@ -102,11 +101,12 @@ function Toggle({ value, onChange, options }) {
   );
 }
 
-function ExtrasSection({ venueId, year, date, guests, selectedExtras, extraQuantities, onChange, onQuantityChange }) {
+function ExtrasSection({ venueId, year, date, guests, selectedExtras, extraQuantities, onChange, onQuantityChange, lang }) {
   if (!venueId || !year) return null;
   const extras = getExtras(venueId, year).filter(e => !['menu-staff', 'menu-infantil'].includes(e.id));
   if (!extras.length) return null;
 
+  const t = T[lang] || T.ca;
   const dow = date ? new Date(date + 'T12:00:00').getDay() : null;
   const month = date ? new Date(date + 'T12:00:00').getMonth() + 1 : null;
 
@@ -128,7 +128,7 @@ function ExtrasSection({ venueId, year, date, guests, selectedExtras, extraQuant
           <div key={e.id} className="extra-item">
             <div className="extra-info">
               <div className="extra-label">
-                {e.label}
+                {getExtraLabel(e.id, lang) || e.label}
                 {isMandatory && <span className="extra-badge badge-mandatory">{mandatoryLabel}</span>}
               </div>
               <div className="extra-price">{priceLabel}</div>
@@ -222,7 +222,7 @@ function SummaryPanel({ form, quote, lang }) {
     const refNum = `UAUU-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
     const today = new Date().toLocaleDateString(t.locale, { day: 'numeric', month: 'long', year: 'numeric' });
     const w = window.open('', '_blank');
-    w.document.write(pdfHTML({ form, quote, venue, dateStr, coupleStr, refNum, today, t }));
+    w.document.write(pdfHTML({ form, quote, venue, dateStr, coupleStr, refNum, today, t, lang }));
     w.document.close();
     w.focus();
     setTimeout(() => w.print(), 700);
@@ -269,7 +269,7 @@ function SummaryPanel({ form, quote, lang }) {
             {quote.extrasLines.map(e => (
               <div key={e.id} className="line-item">
                 <div className="li-left">
-                  <div className="li-label">{e.label} {e.isMandatory && <span className="li-mandatory-tag">{t.mandatory}</span>}</div>
+                  <div className="li-label">{getExtraLabel(e.id, lang) || e.label} {e.isMandatory && <span className="li-mandatory-tag">{t.mandatory}</span>}</div>
                   {e.priceDetail && <div className="li-detail">{e.priceDetail}</div>}
                 </div>
                 <div className="li-amount">{eur(e.computedPrice)}</div>
@@ -292,7 +292,6 @@ function SummaryPanel({ form, quote, lang }) {
             <div className="total-block">
               <div className="total-label">{t.totalLabel}</div>
               <div className="total-amount">{eur(quote.total)}</div>
-              <div className="total-per-person">{t.perGuest(quote.perPerson)}</div>
             </div>
 
             {quote.shortfall > 0 && (
@@ -317,12 +316,15 @@ function SummaryPanel({ form, quote, lang }) {
 }
 
 // ── PDF template ─────────────────────────────────────────────────
-function pdfHTML({ form, quote, venue, dateStr, coupleStr, refNum, today, t }) {
+function pdfHTML({ form, quote, venue, dateStr, coupleStr, refNum, today, t, lang }) {
   const vatPct = Math.round(PRICE_CONFIG.vatRate * 100);
   const linesRows = [
     `<tr><td class="td-l">${t.menuService}<div class="td-sub">${t.pdfMenuDetail(form.guests, quote.pricePerPerson)}</div></td><td class="td-r">${eur(quote.menuBase)}</td></tr>`,
     ...(quote.shortfall > 0 ? [`<tr><td class="td-l" style="color:#a05030">${t.minSupplement}<div class="td-sub" style="color:#c07050">${t.pdfMinDetail(quote.shortfall, PRICE_CONFIG.venues[form.venue].minimumPenaltyPerPerson)}</div></td><td class="td-r" style="color:#a05030">${eur(quote.penaltyAmt)}</td></tr>`] : []),
-    ...quote.extrasLines.map(e => `<tr><td class="td-l">${e.label}${e.isMandatory ? ` <span style="font-size:10px;color:#999;font-style:normal">${t.pdfMandatory}</span>` : ''}${e.priceDetail ? `<div class="td-sub">${e.priceDetail}</div>` : ''}</td><td class="td-r">${eur(e.computedPrice)}</td></tr>`),
+    ...quote.extrasLines.map(e => {
+      const label = getExtraLabel(e.id, lang) || e.label;
+      return `<tr><td class="td-l">${label}${e.isMandatory ? ` <span style="font-size:10px;color:#999;font-style:normal">${t.pdfMandatory}</span>` : ''}${e.priceDetail ? `<div class="td-sub">${e.priceDetail}</div>` : ''}</td><td class="td-r">${eur(e.computedPrice)}</td></tr>`;
+    }),
   ].join('');
 
   return `<!DOCTYPE html><html lang="ca"><head><meta charset="UTF-8"/>
@@ -486,7 +488,7 @@ function App() {
               <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
                 {menuStaffExtra && (
                   <div className="field" style={{ flex: 1 }}>
-                    <label>Menú Staff</label>
+                    <label>{getExtraLabel('menu-staff', lang)}</label>
                     <div className="event-extra-price" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <span>{eur(menuStaffExtra.price)}/pers. + IVA:</span>
                       <input
@@ -496,7 +498,7 @@ function App() {
                         step={1}
                         value={form.extraQuantities[menuStaffExtra.id] ?? 0}
                         onChange={e => setQuantity(menuStaffExtra.id, normalizeQuantity(e.target.value))}
-                        aria-label="Menú Staff quantitat"
+                        aria-label={`${getExtraLabel('menu-staff', lang)} quantitat`}
                       />
                       <span className="extra-quantity-unit">pers.</span>
                     </div>
@@ -505,7 +507,7 @@ function App() {
 
                 {menuInfantilExtra && (
                   <div className="field" style={{ flex: 1 }}>
-                    <label>Menú Infantil</label>
+                    <label>{getExtraLabel('menu-infantil', lang)}</label>
                     <div className="event-extra-price" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <span>{eur(menuInfantilExtra.price)}/pers. + IVA:</span>
                       <input
@@ -515,7 +517,7 @@ function App() {
                         step={1}
                         value={form.extraQuantities[menuInfantilExtra.id] ?? 0}
                         onChange={e => setQuantity(menuInfantilExtra.id, normalizeQuantity(e.target.value))}
-                        aria-label="Menú Infantil quantitat"
+                        aria-label={`${getExtraLabel('menu-infantil', lang)} quantitat`}
                       />
                       <span className="extra-quantity-unit">pers.</span>
                     </div>
@@ -536,6 +538,7 @@ function App() {
             extraQuantities={form.extraQuantities}
             onChange={setExtra}
             onQuantityChange={setQuantity}
+            lang={lang}
           />
 
           {/* Client info */}

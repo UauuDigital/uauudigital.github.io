@@ -12,14 +12,14 @@
 
 const QUANTITY_EXTRAS = {
   2026: [
-    { id: 'ressopo',       label: 'Ressopó',       price: 265, unit: 'pack',   quantityBased: true, optional: true },
-    { id: 'menu-staff',    label: 'Menú Staff',    price: 85,  unit: 'person', quantityBased: true, optional: true },
-    { id: 'menu-infantil', label: 'Menú infantil', price: 65,  unit: 'person', quantityBased: true, optional: true },
+    { id: 'ressopo',       label: 'Ressopó',        price: 265, unit: 'pack',   quantityBased: true, optional: true },
+    { id: 'menu-staff',    label: 'Menú Staff',     price: 85,  unit: 'person', quantityBased: true, optional: true },
+    { id: 'menu-infantil', label: 'Menú infantil',  price: 65,  unit: 'person', quantityBased: true, optional: true },
   ],
   2027: [
-    { id: 'ressopo',       label: 'Ressopó',       price: 275, unit: 'pack',   quantityBased: true, optional: true },
-    { id: 'menu-staff',    label: 'Menú Staff',    price: 85,  unit: 'person', quantityBased: true, optional: true },
-    { id: 'menu-infantil', label: 'Menú infantil', price: 68,  unit: 'person', quantityBased: true, optional: true },
+    { id: 'ressopo',       label: 'Ressopó',        price: 275, unit: 'pack',   quantityBased: true, optional: true },
+    { id: 'menu-staff',    label: 'Menú Staff',     price: 85,  unit: 'person', quantityBased: true, optional: true },
+    { id: 'menu-infantil', label: 'Menú infantil',  price: 68,  unit: 'person', quantityBased: true, optional: true },
   ],
 };
 
@@ -336,6 +336,9 @@ const T = {
     footerNote:      'Pressupost orientatiu i no vinculant.',
     locale:          'ca-ES',
     months:          ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'],
+    supper:          'Ressopó',
+    staffmenu:       'Menú Staff',
+    childrenmenu:     'Menú infantil',
   },
   es: {
     exportBtn:       'Exportar PDF',
@@ -370,6 +373,9 @@ const T = {
     footerNote:      'Presupuesto orientativo y no vinculante.',
     locale:          'es-ES',
     months:          ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+    supper:          'Resopó',
+    staffmenu:       'Menú Staff',
+    childrenmenu:     'Menú infantil',
   },
   en: {
     exportBtn:       'Export PDF',
@@ -404,6 +410,9 @@ const T = {
     footerNote:      'Indicative and non-binding estimate.',
     locale:          'en-GB',
     months:          ['January','February','March','April','May','June','July','August','September','October','November','December'],
+    supper:          'Supper',
+    staffmenu:       'Staff menu',
+    childrenmenu:     'Children menu',
   },
 };
 
@@ -480,6 +489,20 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
     extrasLines, extrasTotal, subtotal, vat, total,
     perPerson: total / guests,
   };
+}
+
+// ================================================================
+//  TRADUCCIONS DELS EXTRAS PER QUANTITAT
+// ================================================================
+
+function getExtraLabel(extraId, lang) {
+  const idToKey = {
+    'ressopo': 'supper',
+    'menu-staff': 'staffmenu',
+    'menu-infantil': 'childrenmenu',
+  };
+  const key = idToKey[extraId];
+  return key ? T[lang]?.[key] : null;
 }
 
 
