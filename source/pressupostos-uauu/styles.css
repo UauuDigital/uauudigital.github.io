@@ -407,6 +407,48 @@ input[type="range"]::-webkit-slider-thumb {
   font-size: 10px;
 }
 
+.extra-quantity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+
+.extra-quantity-input {
+  width: 84px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--color-ink);
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s;
+  -moz-appearance: textfield;
+}
+
+.extra-quantity-input:focus {
+  border-color: var(--color-ink);
+}
+
+.extra-quantity-input::-webkit-outer-spin-button,
+.extra-quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.extra-quantity-unit {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
 /* Info strip */
 .info-strip {
   padding: 14px 18px;

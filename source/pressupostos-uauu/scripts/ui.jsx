@@ -3,6 +3,13 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+function normalizeQuantity(value) {
+  if (value === '' || value === null || value === undefined) return 0;
+  const next = Number(value);
+  if (!Number.isFinite(next)) return 0;
+  return Math.max(0, Math.round(next));
+}
+
 function GuestsControl({ value, onChange }) {
   const [draft, setDraft] = React.useState(String(value));
   const skipNextBlurCommit = React.useRef(false);
@@ -90,7 +97,7 @@ function Toggle({ value, onChange, options }) {
   );
 }
 
-function ExtrasSection({ venueId, year, date, guests, selectedExtras, onChange }) {
+function ExtrasSection({ venueId, year, date, guests, selectedExtras, extraQuantities, onChange, onQuantityChange }) {
   if (!venueId || !year) return null;
   const extras = getExtras(venueId, year);
   if (!extras.length) return null;
@@ -104,9 +111,12 @@ function ExtrasSection({ venueId, year, date, guests, selectedExtras, onChange }
       {extras.map(e => {
         const condMandatory = e.mandatoryWhen && dow !== null ? e.mandatoryWhen(dow, month) : false;
         const isMandatory = !e.optional || condMandatory;
-        const priceLabel = e.pricePerPerson
-          ? `${eur(e.pricePerPerson)}/pers. (mínim ${eur(e.minPrice)}) + IVA`
-          : `${eur(e.price || 0)} + IVA`;
+        const quantity = e.quantityBased ? (extraQuantities?.[e.id] ?? 0) : null;
+        const priceLabel = e.quantityBased
+          ? `${eur(e.price || 0)}/${e.unit === 'pack' ? 'pack' : 'pers.'} + IVA`
+          : e.pricePerPerson
+            ? `${eur(e.pricePerPerson)}/pers. (mínim ${eur(e.minPrice)}) + IVA`
+            : `${eur(e.price || 0)} + IVA`;
         const mandatoryLabel = condMandatory ? 'Obligatori (data sel.)' : 'Obligatori';
 
         return (
@@ -118,7 +128,20 @@ function ExtrasSection({ venueId, year, date, guests, selectedExtras, onChange }
               </div>
               <div className="extra-price">{priceLabel}</div>
             </div>
-            {isMandatory ? (
+            {e.quantityBased ? (
+              <div className="extra-quantity">
+                <input
+                  className="extra-quantity-input"
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={quantity}
+                  onChange={ev => onQuantityChange(e.id, normalizeQuantity(ev.target.value))}
+                  aria-label={`${e.label} quantitat`}
+                />
+                <span className="extra-quantity-unit">{e.unit === 'pack' ? 'pack' : 'pers.'}</span>
+              </div>
+            ) : isMandatory ? (
               <div style={{ fontSize: 12, fontFamily: 'var(--font-sans)', letterSpacing: '0.1em', color: 'var(--color-muted)', textTransform: 'uppercase', marginLeft: 16 }}>Inclòs</div>
             ) : (
               <div className="extra-toggle">
@@ -374,13 +397,21 @@ th:last-child{text-align:right}
 // ── Main App ─────────────────────────────────────────────────────
 function App() {
   const [form, setForm] = React.useState(() => {
-    try { return JSON.parse(localStorage.getItem('uauu-v2-form') || 'null') || defaultForm(); }
+    try {
+      const saved = JSON.parse(localStorage.getItem('uauu-v2-form') || 'null');
+      return {
+        ...defaultForm(),
+        ...(saved || {}),
+        selectedExtras: (saved && saved.selectedExtras) || {},
+        extraQuantities: (saved && saved.extraQuantities) || {},
+      };
+    }
     catch { return defaultForm(); }
   });
   const [lang, setLang] = React.useState(() => localStorage.getItem('uauu-lang') || 'ca');
 
   function defaultForm() {
-    return { venue: '', date: '', guests: 80, selectedExtras: {}, coupleName: '', notes: '' };
+    return { venue: '', date: '', guests: 80, selectedExtras: {}, extraQuantities: {}, coupleName: '', notes: '' };
   }
 
   React.useEffect(() => { localStorage.setItem('uauu-v2-form', JSON.stringify(form)); }, [form]);
@@ -388,9 +419,17 @@ function App() {
 
   function set(key, val) { setForm(f => ({ ...f, [key]: val })); }
   function setExtra(id, val) { setForm(f => ({ ...f, selectedExtras: { ...f.selectedExtras, [id]: val } })); }
+  function setQuantity(id, val) { setForm(f => ({ ...f, extraQuantities: { ...f.extraQuantities, [id]: val } })); }
 
   const dateYear = form.date ? new Date(form.date + 'T12:00:00').getFullYear() : null;
-  React.useEffect(() => { setForm(f => ({ ...f, selectedExtras: {} })); }, [form.venue, dateYear]);
+  const hasMountedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
+    }
+    setForm(f => ({ ...f, selectedExtras: {}, extraQuantities: {} }));
+  }, [form.venue, dateYear]);
 
   const quote = React.useMemo(() => computeQuote(form), [form]);
 
@@ -454,7 +493,9 @@ function App() {
             date={form.date}
             guests={form.guests}
             selectedExtras={form.selectedExtras}
+            extraQuantities={form.extraQuantities}
             onChange={setExtra}
+            onQuantityChange={setQuantity}
           />
 
           {/* Client info */}

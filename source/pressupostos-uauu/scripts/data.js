@@ -6,8 +6,22 @@
 //  diaDeLaSetmana: 0=Diumenge, 1=Dl, 2=Dm, 3=Dc, 4=Dj, 5=Dv, 6=Ds
 //  extras[any] = llista de { id, label, price, optional }
 //    optional: true = el client pot triar; false = sempre inclòs (obligatori)
+//    quantityBased: true = el preu es calcula amb una quantitat introduïda
 //  minimumPenaltyPerPerson: preu/persona cobrat per sota del mínim
 // ================================================================
+
+const QUANTITY_EXTRAS = {
+  2026: [
+    { id: 'ressopo',       label: 'Ressopó',       price: 265, unit: 'pack',   quantityBased: true, optional: true },
+    { id: 'menu-staff',    label: 'Menú Staff',    price: 85,  unit: 'person', quantityBased: true, optional: true },
+    { id: 'menu-infantil', label: 'Menú infantil', price: 65,  unit: 'person', quantityBased: true, optional: true },
+  ],
+  2027: [
+    { id: 'ressopo',       label: 'Ressopó',       price: 275, unit: 'pack',   quantityBased: true, optional: true },
+    { id: 'menu-staff',    label: 'Menú Staff',    price: 85,  unit: 'person', quantityBased: true, optional: true },
+    { id: 'menu-infantil', label: 'Menú infantil', price: 68,  unit: 'person', quantityBased: true, optional: true },
+  ],
+};
 
 const PRICE_CONFIG = {
 
@@ -66,12 +80,14 @@ const PRICE_CONFIG = {
           { id: 'ceremony',     label: 'Cerimònia',     price: 1190, optional: true  },
           { id: 'dj',           label: 'DJ',             price: 1195, optional: false },
           { id: 'bridal-suite', label: 'Suite Nupcial',  price: 290,  optional: true  },
+          ...QUANTITY_EXTRAS[2026],
         ],
         2027: [
           { id: 'ceremony',           label: 'Cerimònia',                price: 1740, optional: true  },
           { id: 'bridal-suite',       label: 'Suite Nupcial',            price: 295,  optional: true  },
           { id: 'essential-services', label: 'Quota serveis essencials', price: 890,  optional: false },
           { id: 'dj',                 label: 'DJ',                       price: 1250, optional: false },
+          ...QUANTITY_EXTRAS[2027],
         ],
       },
     },
@@ -126,12 +142,14 @@ const PRICE_CONFIG = {
           { id: 'ceremony',          label: 'Cerimònia',          price: 1690, optional: true  },
           { id: 'dj',                label: 'DJ',                  price: 1195, optional: false },
           { id: 'banquet-exterior',  label: 'Banquet a l\'exterior', price: 2500, optional: true  },
+          ...QUANTITY_EXTRAS[2026],
         ],
         2027: [
           { id: 'ceremony',          label: 'Cerimònia',                price: 1740, optional: true  },
           { id: 'essential-services',label: 'Quota serveis essencials', price: 1490, optional: false },
           { id: 'dj',                label: 'DJ',                       price: 1250, optional: false },
           { id: 'banquet-exterior',  label: 'Banquet a l\'exterior',    price: 2500, optional: true  },
+          ...QUANTITY_EXTRAS[2027],
         ],
       },
     },
@@ -186,6 +204,7 @@ const PRICE_CONFIG = {
             mandatoryWhen: (dow, month) => dow === 6 && [5,6,7,8,9,10].includes(month) },
           // Banquet exterior: 10€/persona, mínim 1500€
           { id: 'banquet-exterior', label: "Banquet a l'exterior", pricePerPerson: 10, minPrice: 1500, optional: true },
+          ...QUANTITY_EXTRAS[2026],
         ],
         2027: [
           { id: 'ceremony',           label: 'Cerimònia',                price: 1740, optional: true  },
@@ -194,6 +213,7 @@ const PRICE_CONFIG = {
           { id: 'accommodation',      label: 'Allotjament',              price: 1290, optional: true,
             mandatoryWhen: (dow, month) => dow === 6 && [5,6,7,8,9,10].includes(month) },
           { id: 'banquet-exterior',   label: "Banquet a l'exterior",     pricePerPerson: 10, minPrice: 1500, optional: true },
+          ...QUANTITY_EXTRAS[2027],
         ],
       },
     },
@@ -246,6 +266,7 @@ const PRICE_CONFIG = {
           { id: 'accommodation', label: 'Allotjament',        price: 1290, optional: true,
             mandatoryWhen: (dow, month) => dow === 6 && [5,6,7,8,9,10].includes(month) },
           { id: 'garden-aperitif', label: "Aperitiu al jardí", pricePerPerson: 10, minPrice: 1000, optional: true },
+          ...QUANTITY_EXTRAS[2026],
         ],
         2027: [
           { id: 'ceremony',           label: 'Cerimònia',                price: 1740, optional: true  },
@@ -254,6 +275,7 @@ const PRICE_CONFIG = {
           { id: 'accommodation',      label: 'Allotjament',              price: 1390, optional: true,
             mandatoryWhen: (dow, month) => dow === 6 && [5,6,7,8,9,10].includes(month) },
           { id: 'garden-aperitif',    label: "Aperitiu al jardí",        pricePerPerson: 10, minPrice: 1000, optional: true },
+          ...QUANTITY_EXTRAS[2027],
         ],
       },
     },
@@ -410,7 +432,7 @@ function getExtras(venueId, year) {
   return v.extras[usedYear] || [];
 }
 
-function computeQuote({ venue, date, guests, selectedExtras }) {
+function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantities = {} }) {
   if (!venue || !date || guests < 1) return null;
   const d = new Date(date + 'T12:00:00');
   const year = d.getFullYear(), month = d.getMonth() + 1, dow = d.getDay();
@@ -425,16 +447,24 @@ function computeQuote({ venue, date, guests, selectedExtras }) {
     : 0;
 
   const allExtras = getExtras(venue, year);
+  const quantities = extraQuantities || {};
   const extrasLines = allExtras.map(e => {
     const condMandatory = e.mandatoryWhen ? e.mandatoryWhen(dow, month) : false;
     const isMandatory = !e.optional || condMandatory;
-    const included = isMandatory || selectedExtras[e.id] === true;
-    const computedPrice = e.pricePerPerson
-      ? Math.max(guests * e.pricePerPerson, e.minPrice || 0)
-      : (e.price || 0);
-    const priceDetail = e.pricePerPerson
-      ? `${guests} pers. × ${eur(e.pricePerPerson)} (mínim ${eur(e.minPrice)})`
-      : null;
+    const quantity = e.quantityBased ? Math.max(0, Math.round(Number(quantities[e.id] || 0))) : null;
+    const included = e.quantityBased
+      ? true
+      : (isMandatory || selectedExtras[e.id] === true);
+    const computedPrice = e.quantityBased
+      ? quantity * (e.price || 0)
+      : (e.pricePerPerson
+        ? Math.max(guests * e.pricePerPerson, e.minPrice || 0)
+        : (e.price || 0));
+    const priceDetail = e.quantityBased
+      ? `${quantity} ${quantity === 1 ? 'pack' : 'packs'} × ${eur(e.price)}`
+      : (e.pricePerPerson
+        ? `${guests} pers. × ${eur(e.pricePerPerson)} (mínim ${eur(e.minPrice)})`
+        : null);
     return { ...e, isMandatory, condMandatory, included, computedPrice, priceDetail };
   }).filter(e => e.included);
 
