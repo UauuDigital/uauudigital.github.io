@@ -10,6 +10,11 @@ function normalizeQuantity(value) {
   return Math.max(0, Math.round(next));
 }
 
+function getQuantityExtra(venueId, year, extraId) {
+  if (!venueId || !year) return null;
+  return getExtras(venueId, year).find(e => e.id === extraId) || null;
+}
+
 function GuestsControl({ value, onChange }) {
   const [draft, setDraft] = React.useState(String(value));
   const skipNextBlurCommit = React.useRef(false);
@@ -99,7 +104,7 @@ function Toggle({ value, onChange, options }) {
 
 function ExtrasSection({ venueId, year, date, guests, selectedExtras, extraQuantities, onChange, onQuantityChange }) {
   if (!venueId || !year) return null;
-  const extras = getExtras(venueId, year);
+  const extras = getExtras(venueId, year).filter(e => !['menu-staff', 'menu-infantil'].includes(e.id));
   if (!extras.length) return null;
 
   const dow = date ? new Date(date + 'T12:00:00').getDay() : null;
@@ -400,7 +405,7 @@ function App() {
     try {
       localStorage.removeItem('uauu-v2-form');
     }
-    catch {}
+    catch { }
     return defaultForm();
   });
   const [lang, setLang] = React.useState(() => localStorage.getItem('uauu-lang') || 'ca');
@@ -416,6 +421,8 @@ function App() {
   function setQuantity(id, val) { setForm(f => ({ ...f, extraQuantities: { ...f.extraQuantities, [id]: val } })); }
 
   const dateYear = form.date ? new Date(form.date + 'T12:00:00').getFullYear() : null;
+  const menuStaffExtra = getQuantityExtra(form.venue, dateYear, 'menu-staff');
+  const menuInfantilExtra = getQuantityExtra(form.venue, dateYear, 'menu-infantil');
   const hasMountedRef = React.useRef(false);
   React.useEffect(() => {
     if (!hasMountedRef.current) {
@@ -462,7 +469,7 @@ function App() {
           {/* Date & Guests */}
           <div className="form-section">
             <div className="section-title">Detalls de l'esdeveniment</div>
-            <div className="field-row">
+            <div className="event-details-list">
               <div className="field">
                 <label>Data de la boda</label>
                 <input type="date" value={form.date} className={form.date ? 'filled' : ''}
@@ -475,6 +482,45 @@ function App() {
                 <input type="range" min={10} max={400} step={1} value={form.guests}
                   onChange={e => set('guests', Number(e.target.value))} />
                 <div className="range-labels"><span>10</span><span>400</span></div>
+              </div>
+              <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                {menuStaffExtra && (
+                  <div className="field" style={{ flex: 1 }}>
+                    <label>Menú Staff</label>
+                    <div className="event-extra-price" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span>{eur(menuStaffExtra.price)}/pers. + IVA:</span>
+                      <input
+                        className="extra-quantity-input"
+                        type="number"
+                        min={0}
+                        step={1}
+                        value={form.extraQuantities[menuStaffExtra.id] ?? 0}
+                        onChange={e => setQuantity(menuStaffExtra.id, normalizeQuantity(e.target.value))}
+                        aria-label="Menú Staff quantitat"
+                      />
+                      <span className="extra-quantity-unit">pers.</span>
+                    </div>
+                  </div>
+                )}
+
+                {menuInfantilExtra && (
+                  <div className="field" style={{ flex: 1 }}>
+                    <label>Menú Infantil</label>
+                    <div className="event-extra-price" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span>{eur(menuInfantilExtra.price)}/pers. + IVA:</span>
+                      <input
+                        className="extra-quantity-input"
+                        type="number"
+                        min={0}
+                        step={1}
+                        value={form.extraQuantities[menuInfantilExtra.id] ?? 0}
+                        onChange={e => setQuantity(menuInfantilExtra.id, normalizeQuantity(e.target.value))}
+                        aria-label="Menú Infantil quantitat"
+                      />
+                      <span className="extra-quantity-unit">pers.</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <DateInfoStrip venueId={form.venue} date={form.date} />

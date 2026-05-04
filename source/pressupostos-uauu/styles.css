@@ -186,6 +186,29 @@ body {
   grid-template-columns: 1fr;
 }
 
+.event-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.event-details-list .field {
+  width: 100%;
+}
+
+.event-extra-price {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  color: var(--color-muted);
+  margin-bottom: 8px;
+}
+
+.event-extra-quantity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* Venue cards */
 .venue-grid {
   display: grid;
