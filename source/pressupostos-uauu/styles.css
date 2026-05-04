@@ -6,9 +6,15 @@
   padding: 0;
 }
 
+html {
+  font-size: 17px;
+}
+
 body {
   background: var(--color-sand-pale);
   font-family: var(--font-serif);
+  font-size: var(--text-base);
+  line-height: 1.55;
   color: var(--color-ink);
   min-height: 100vh;
 }
@@ -60,7 +66,7 @@ body {
 
 .page-header-label {
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--color-muted);
@@ -76,7 +82,7 @@ body {
   border: 1px solid var(--color-divider);
   background: var(--color-white);
   font-family: var(--font-sans);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-muted);
@@ -120,7 +126,7 @@ body {
 
 .section-title {
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--color-muted);
@@ -132,7 +138,7 @@ body {
 .field label {
   display: block;
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--color-muted);
@@ -234,18 +240,42 @@ body {
 }
 
 /* Guests slider */
-.guests-display {
+.guests-control {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.field input[type="text"].guests-input {
   font-family: var(--font-display);
   font-size: 3rem;
   font-weight: 500;
   color: var(--color-ink);
-  line-height: 1;
-  margin-bottom: 4px;
+  line-height: 0.5;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+  box-shadow: none;
+  caret-color: var(--color-ink);
+}
+
+.field input[type="text"].guests-input:hover,
+.field input[type="text"].guests-input:focus {
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .guests-sub {
   font-family: var(--font-sans);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-muted);
@@ -279,7 +309,7 @@ input[type="range"]::-webkit-slider-thumb {
   justify-content: space-between;
   margin-top: 8px;
   font-family: var(--font-sans);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.1em;
   color: var(--color-muted);
 }
@@ -295,7 +325,7 @@ input[type="range"]::-webkit-slider-thumb {
   border: 1px solid var(--color-divider);
   background: var(--color-white);
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-muted);
@@ -337,21 +367,21 @@ input[type="range"]::-webkit-slider-thumb {
 
 .extra-label {
   font-family: var(--font-serif);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 300;
   color: var(--color-ink);
 }
 
 .extra-price {
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-muted);
   margin-top: 2px;
 }
 
 .extra-badge {
   font-family: var(--font-sans);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   padding: 3px 7px;
@@ -374,7 +404,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .extra-toggle .toggle-btn {
   padding: 8px 14px;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 /* Info strip */
@@ -391,7 +421,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .info-strip-label {
   font-family: var(--font-sans);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--color-muted);
@@ -400,7 +430,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .info-strip-value {
   font-family: var(--font-serif);
-  font-size: 15px;
+  font-size: 16px;
   color: var(--color-ink);
 }
 
@@ -409,7 +439,7 @@ input[type="range"]::-webkit-slider-thumb {
   padding: 12px 16px;
   border-radius: var(--radius-sm);
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: 14px;
   font-style: italic;
   line-height: 1.5;
   margin-top: 16px;
@@ -466,7 +496,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .s-label {
   font-family: var(--font-sans);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--color-muted);
@@ -509,13 +539,13 @@ input[type="range"]::-webkit-slider-thumb {
 .li-label {
   font-family: var(--font-serif);
   font-weight: 300;
-  font-size: 15px;
+  font-size: 16px;
   color: var(--color-body);
 }
 
 .li-detail {
   font-family: var(--font-sans);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.09em;
   color: var(--color-muted);
   margin-top: 2px;
@@ -523,7 +553,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .li-mandatory-tag {
   font-family: var(--font-sans);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-muted);
@@ -533,7 +563,7 @@ input[type="range"]::-webkit-slider-thumb {
 .li-amount {
   font-family: var(--font-serif);
   font-weight: 400;
-  font-size: 15px;
+  font-size: 16px;
   color: var(--color-ink);
   white-space: nowrap;
 }
@@ -541,7 +571,7 @@ input[type="range"]::-webkit-slider-thumb {
 .li-muted .li-label,
 .li-muted .li-amount {
   color: var(--color-muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .penalty-line {
@@ -551,14 +581,14 @@ input[type="range"]::-webkit-slider-thumb {
 
 .penalty-label {
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: 14px;
   font-style: italic;
   color: #a05030;
 }
 
 .penalty-amount {
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: 14px;
   color: #a05030;
   white-space: nowrap;
 }
@@ -570,7 +600,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .total-label {
   font-family: var(--font-sans);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--color-muted);
@@ -579,7 +609,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .total-amount {
   font-family: var(--font-display);
-  font-size: 2.6rem;
+  font-size: 2.75rem;
   font-weight: 500;
   color: var(--color-ink);
   line-height: 1;
@@ -588,7 +618,7 @@ input[type="range"]::-webkit-slider-thumb {
 .total-per-person {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-muted);
   margin-top: 5px;
 }
@@ -596,7 +626,7 @@ input[type="range"]::-webkit-slider-thumb {
 .summary-note {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--color-muted);
   line-height: 1.5;
   margin-top: 16px;
@@ -632,7 +662,7 @@ input[type="range"]::-webkit-slider-thumb {
   border: none;
   border-radius: var(--radius-sm);
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   cursor: pointer;
