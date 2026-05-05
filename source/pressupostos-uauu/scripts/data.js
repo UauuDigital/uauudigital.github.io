@@ -410,7 +410,7 @@ const T = {
     footerNote:      'Indicative and non-binding estimate.',
     locale:          'en-GB',
     months:          ['January','February','March','April','May','June','July','August','September','October','November','December'],
-    supper:          'Supper',
+    supper:          'Late night snack',
     staffmenu:       'Staff menu',
     childrenmenu:     'Children menu',
   },
