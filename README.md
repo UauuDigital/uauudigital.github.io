@@ -13,9 +13,29 @@ Aplicació web estàtica pensada per a GitHub Pages.
 
 ## On editar
 
+### Configuració i dades
+- **Preus i mínims**: `source/pressupostos-uauu/scripts/config/pricing.js`
+- **Dades de les finques**: `source/pressupostos-uauu/scripts/config/venues.js`
+- **Traduccions**: `source/pressupostos-uauu/scripts/i18n/translations.js`
+
+### Lògica de negoci
+- **Calculadora de pressupostos**: `source/pressupostos-uauu/scripts/lib/quoteCalculator.js`
+- **Formatadors (EUR)**: `source/pressupostos-uauu/scripts/lib/formatters.js`
+- **Generador PDF**: `source/pressupostos-uauu/scripts/lib/pdfGenerator.js`
+
+### Utilitats i components
+- **Utilitats d'entrada**: `source/pressupostos-uauu/scripts/utils/input.js`
+- **Componentes UI**: `source/pressupostos-uauu/scripts/components/`
+  - `GuestsControl.jsx` - Control de nombre de convidats
+  - `VenueCards.jsx` - Selector de finques
+  - `Toggle.jsx` - Botó de selecció
+  - `DateInfoStrip.jsx` - Informació de data i preus
+  - `ExtrasSection.jsx` - Secció de serveis addicionals
+  - `SummaryPanel.jsx` - Panell de resum i exportació
+- **App principal**: `source/pressupostos-uauu/scripts/App.jsx`
+
+### Estils i recursos
 - Shell principal: `source/pressupostos-uauu/index.html`
-- Dades i càlcul: `source/pressupostos-uauu/scripts/data.js`
-- Components i app: `source/pressupostos-uauu/scripts/ui.jsx`
 - Estils compartits: `source/pressupostos-uauu/colors_and_type.css`
 - Estil de la interfície: `source/pressupostos-uauu/styles.css`
 - Component de proves: `source/pressupostos-uauu/tweaks-panel.jsx`

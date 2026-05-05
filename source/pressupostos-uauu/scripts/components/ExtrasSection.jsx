@@ -1,0 +1,59 @@
+function ExtrasSection({ venueId, year, date, guests, selectedExtras, extraQuantities, onChange, onQuantityChange, lang }) {
+  if (!venueId || !year) return null;
+  const extras = getExtras(venueId, year).filter(e => !['menu-staff', 'menu-infantil'].includes(e.id));
+  if (!extras.length) return null;
+
+  const t = T[lang] || T.ca;
+  const dow = date ? new Date(date + 'T12:00:00').getDay() : null;
+  const month = date ? new Date(date + 'T12:00:00').getMonth() + 1 : null;
+
+  return (
+    <div className="form-section">
+      <div className="section-title">Serveis addicionals</div>
+      {extras.map(e => {
+        const condMandatory = e.mandatoryWhen && dow !== null ? e.mandatoryWhen(dow, month) : false;
+        const isMandatory = !e.optional || condMandatory;
+        const quantity = e.quantityBased ? (extraQuantities?.[e.id] ?? 0) : null;
+        const priceLabel = e.quantityBased
+          ? `${eur(e.price || 0)}/${e.unit === 'pack' ? 'pack' : 'pers.'} + IVA`
+          : e.pricePerPerson
+            ? `${eur(e.pricePerPerson)}/pers. (mínim ${eur(e.minPrice)}) + IVA`
+            : `${eur(e.price || 0)} + IVA`;
+        const mandatoryLabel = condMandatory ? 'Obligatori (data sel.)' : 'Obligatori';
+
+        return (
+          <div key={e.id} className="extra-item">
+            <div className="extra-info">
+              <div className="extra-label">
+                {getExtraLabel(e.id, lang) || e.label}
+                {isMandatory && <span className="extra-badge badge-mandatory">{mandatoryLabel}</span>}
+              </div>
+              <div className="extra-price">{priceLabel}</div>
+            </div>
+            {e.quantityBased ? (
+              <div className="extra-quantity">
+                <input
+                  className="extra-quantity-input"
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={quantity}
+                  onChange={ev => onQuantityChange(e.id, normalizeQuantity(ev.target.value))}
+                  aria-label={`${e.label} quantitat`}
+                />
+                <span className="extra-quantity-unit">{e.unit === 'pack' ? 'pack' : 'pers.'}</span>
+              </div>
+            ) : isMandatory ? (
+              <div style={{ fontSize: 12, fontFamily: 'var(--font-sans)', letterSpacing: '0.1em', color: 'var(--color-muted)', textTransform: 'uppercase', marginLeft: 16 }}>Inclòs</div>
+            ) : (
+              <div className="extra-toggle">
+                <button className={`toggle-btn ${selectedExtras[e.id] ? 'active' : ''}`} onClick={() => onChange(e.id, true)}>Sí</button>
+                <button className={`toggle-btn ${!selectedExtras[e.id] ? 'active' : ''}`} onClick={() => onChange(e.id, false)}>No</button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}

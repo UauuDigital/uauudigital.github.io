@@ -32,7 +32,34 @@
 <body>
 <div id="root"></div>
 
-<script type="text/babel" data-presets="env,react" src="scripts/data.js"></script>
-<script type="text/babel" data-presets="env,react" src="scripts/ui.jsx"></script>
+<!-- Configuration & Pricing -->
+<script type="text/babel" data-presets="env,react" src="scripts/config/pricing.js"></script>
+<script type="text/babel" data-presets="env,react" src="scripts/config/venues.js"></script>
+
+<!-- Formatters (needed by translations) -->
+<script type="text/babel" data-presets="env,react" src="scripts/lib/formatters.js"></script>
+
+<!-- Internationalization -->
+<script type="text/babel" data-presets="env,react" src="scripts/i18n/translations.js"></script>
+
+<!-- Business Logic & Calculations -->
+<script type="text/babel" data-presets="env,react" src="scripts/lib/quoteCalculator.js"></script>
+
+<!-- Utilities -->
+<script type="text/babel" data-presets="env,react" src="scripts/utils/input.js"></script>
+
+<!-- UI Components -->
+<script type="text/babel" data-presets="env,react" src="scripts/components/Toggle.jsx"></script>
+<script type="text/babel" data-presets="env,react" src="scripts/components/VenueCards.jsx"></script>
+<script type="text/babel" data-presets="env,react" src="scripts/components/GuestsControl.jsx"></script>
+<script type="text/babel" data-presets="env,react" src="scripts/components/DateInfoStrip.jsx"></script>
+<script type="text/babel" data-presets="env,react" src="scripts/components/ExtrasSection.jsx"></script>
+
+<!-- PDF Generation -->
+<script type="text/babel" data-presets="env,react" src="scripts/lib/pdfGenerator.js"></script>
+
+<!-- Summary Panel & Main App -->
+<script type="text/babel" data-presets="env,react" src="scripts/components/SummaryPanel.jsx"></script>
+<script type="text/babel" data-presets="env,react" src="scripts/App.jsx"></script>
 </body>
 </html>
