@@ -27,8 +27,8 @@ function eur(n) {
 // ────────────────────────────────────────────────────────────────
 
 const VENUES = [
-  { id: 'mas-vivencs',     name: 'Mas Vivencs',      logo: 'assets/logo-mas-vivencs.png',      type: 'Mas Rural'        },
-  { id: 'castell-de-tous', name: 'Castell de Tous',  logo: 'assets/logo-castell-de-tous.png',  type: 'Castell Històric' },
+  { id: 'mas-vivencs',     name: 'Mas Vivencs',       logo: 'assets/logo-mas-vivencs.png',      type: 'Mas Rural'        },
+  { id: 'castell-de-tous', name: 'Castell de Tous',   logo: 'assets/logo-castell-de-tous.png',  type: 'Castell Històric' },
   { id: 'can-macia',       name: 'Can Macià',         logo: 'assets/logo-can-macia.png',        type: 'Masia Rural'      },
   { id: 'ca-nalzina',      name: "Ca n'Alzina",       logo: 'assets/logo-ca-nalzina.png',       type: 'Masia Rural'      },
 ];
@@ -39,10 +39,10 @@ const VENUES = [
 
 const QUANTITY_EXTRAS = {
   2026: [
-    { id: 'ressopo',       label: 'Ressopó',        price: 265, unit: 'pack',   quantityBased: true, optional: true },
+    { id: 'ressopo',      label: 'Ressopó',        price: 265, unit: 'pack',   quantityBased: true, optional: true },
     { id: 'staffmenu',    label: 'Menú Staff',     price: 85,  unit: 'person', quantityBased: true, optional: true },
     { id: 'childrenmenu', label: 'Menú infantil',  price: 65,  unit: 'person', quantityBased: true, optional: true },
-    { id: 'sushi',         label: 'Sushi',                                                           optional: true,
+    { id: 'sushi',        label: 'Sushi',                                                           optional: true,
       pricingFn: guests => {
         if (guests < 35) return 0;
         if (guests <= 80) return 750;
@@ -54,12 +54,21 @@ const QUANTITY_EXTRAS = {
        return `750€ + ${guests - 80}pers. × 4€`;  
       }
     },
+    { id: 'pernil',        label: 'Pernil',                    unit: 'unit',                         optional: true,
+      variants: [
+        { id: 'res',                  label: ' ',                          price: 0    },
+        { id: 'espatllaibericacebo',  label: 'Espatlla ibèrica de cebo',   price: 580  },
+        { id: 'espatllaobericagla',   label: 'Espatlla ibèrica de gla 5J', price: 690  },
+        { id: 'pernilibericcebo',     label: 'Pernil ibèric de cebo:',     price: 765  },
+        { id: 'pernilibericgla',      label: 'Pernil ibèric de gla 5J',    price: 1150 }
+      ]
+    },
   ],
   2027: [
-    { id: 'ressopo',       label: 'Ressopó',        price: 275, unit: 'pack',   quantityBased: true, optional: true },
+    { id: 'ressopo',      label: 'Ressopó',        price: 275, unit: 'pack',   quantityBased: true, optional: true },
     { id: 'staffmenu',    label: 'Menú Staff',     price: 85,  unit: 'person', quantityBased: true, optional: true },
     { id: 'childrenmenu', label: 'Menú infantil',  price: 68,  unit: 'person', quantityBased: true, optional: true },
-    { id: 'sushi',         label: 'Sushi',                                                           optional: true,
+    { id: 'sushi',        label: 'Sushi',                                                           optional: true,
       pricingFn: guests => {
         if (guests < 35) return 0;
         if (guests <= 80) return 750;
@@ -70,6 +79,15 @@ const QUANTITY_EXTRAS = {
        if (guests <= 80) return '750€';
        return `750€ + ${guests - 80}pers. × 4€`;  
       }
+    },
+    { id: 'pernil',        label: 'Pernil',                    unit: 'unit',                         optional: true,
+      variants: [
+        { id: 'res',                  label: ' ',                          price: 0    },
+        { id: 'espatllaibericacebo',  label: 'Espatlla ibèrica de cebo',   price: 620  },
+        { id: 'espatllaobericagla',   label: 'Espatlla ibèrica de gla 5J', price: 730  },
+        { id: 'pernilibericcebo',     label: 'Pernil ibèric de cebo:',     price: 790  },
+        { id: 'pernilibericgla',      label: 'Pernil ibèric de gla 5J',    price: 1195 }
+      ]
     },
   ],
 };
@@ -507,7 +525,7 @@ function getExtras(venueId, year) {
   return v.extras[usedYear] || [];
 }
 
-function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantities = {} }) {
+function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantities, extraVariants = {} }) {
   if (!venue || !date || guests < 1) return null;
   const d = new Date(date + 'T12:00:00');
   const year = d.getFullYear(), month = d.getMonth() + 1, dow = d.getDay();
@@ -526,31 +544,41 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
   const extrasLines = allExtras.map(e => {
     const condMandatory = e.mandatoryWhen ? e.mandatoryWhen(dow, month) : false;
     const isMandatory = !e.optional || condMandatory;
-    const quantity = e.quantityBased ? Math.max(0, Math.round(Number(quantities[e.id] || 0))) : null;
-    const included = e.quantityBased
-      ? true
-      : (isMandatory || selectedExtras[e.id] === true);
-    
+    const quantity = e.quantityBased ? Math.max(0, Math.round(Number(extraQuantities[e.id] || 0))) : null;    
+    const included = isMandatory || selectedExtras[e.id] === true;
+    const hasQuantity = e.quantityBased ? quantity > 0 : true;
+
     let computedPrice = 0;
     let priceDetail = null;
+
+    let currentPrice = e.price || 0;
+    let variantSuffix = "";
+
+    if (e.variants && extraVariants && extraVariants[e.id]) {
+        const selectedVariant = e.variants.find(v => v.id === extraVariants[e.id]);
+        if (selectedVariant) {
+            currentPrice = selectedVariant.price;
+            variantSuffix = ` (${selectedVariant.label})`;
+        }
+    }
     
     if (e.quantityBased) {
-      computedPrice = quantity * (e.price || 0);
-      priceDetail = `${quantity} ${quantity === 1 ? 'pack' : 'packs'} × ${eur(e.price)}`;
+      computedPrice = quantity * currentPrice;
+      // Actualitzem el detall amb el nom de la variant si existeix
+      priceDetail = `${quantity} ${e.unit === 'unit' ? 'unit.' : 'pack/s'}${variantSuffix} × ${eur(currentPrice)}`;
     } else if (e.pricingFn) {
-    // Li passem el 'guests' que ve del slider de la pàgina
-    computedPrice = e.pricingFn(guests) || 0;
-    priceDetail = e.pricingFnDetail ? e.pricingFnDetail(guests) : null;
+      computedPrice = e.pricingFn(guests) || 0;
+      priceDetail = e.pricingFnDetail ? e.pricingFnDetail(guests) : null;
     } 
     else if (e.pricePerPerson) {
       computedPrice = Math.max(guests * e.pricePerPerson, e.minPrice || 0);
       priceDetail = `${guests} pers. × ${eur(e.pricePerPerson)} (mínim ${eur(e.minPrice)})`;
     } 
     else {
-      computedPrice = e.price || 0;
+      computedPrice = currentPrice;
     }
     
-    return { ...e, isMandatory, condMandatory, included, computedPrice, priceDetail };
+  return { ...e, isMandatory, condMandatory, included: included && hasQuantity, computedPrice, priceDetail };
   }).filter(e => e.included);
 
   const extrasTotal = extrasLines.reduce((s, e) => s + e.computedPrice, 0);

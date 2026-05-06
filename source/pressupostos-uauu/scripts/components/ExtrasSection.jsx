@@ -1,4 +1,16 @@
-function ExtrasSection({ venueId, year, date, guests, selectedExtras, extraQuantities, onChange, onQuantityChange, lang }) {
+function ExtrasSection({ 
+  venueId, 
+  year, 
+  date, 
+  guests, 
+  selectedExtras, 
+  extraQuantities, 
+  extraVariants,      // 1. Afegim extraVariants
+  onChange, 
+  onQuantityChange, 
+  onVariantChange,    // 2. Afegim onVariantChange
+  lang 
+}) {
   if (!venueId || !year) return null;
   const extras = getExtras(venueId, year).filter(e => !['menu-staff', 'menu-infantil'].includes(e.id));
   if (!extras.length) return null;
@@ -14,11 +26,20 @@ function ExtrasSection({ venueId, year, date, guests, selectedExtras, extraQuant
         const condMandatory = e.mandatoryWhen && dow !== null ? e.mandatoryWhen(dow, month) : false;
         const isMandatory = !e.optional || condMandatory;
         const quantity = e.quantityBased ? (extraQuantities?.[e.id] ?? 0) : null;
+        
+        // 3. Lògica per determinar el preu a mostrar segons la variant seleccionada
+        let currentPrice = e.price || 0;
+        if (e.variants && extraVariants?.[e.id]) {
+          const variant = e.variants.find(v => v.id === extraVariants[e.id]);
+          if (variant) currentPrice = variant.price;
+        }
+
         const priceLabel = e.quantityBased
-          ? `${eur(e.price || 0)}/${e.unit === 'pack' ? 'pack' : 'pers.'} + IVA`
+          ? `${eur(currentPrice)}/${e.unit === 'unit' ? 'unit.' : 'pack'} + IVA`
           : e.pricePerPerson
             ? `${eur(e.pricePerPerson)}/pers. (mínim ${eur(e.minPrice)}) + IVA`
-            : `${eur(e.price || 0)} + IVA`;
+            : `${eur(currentPrice)} + IVA`;
+            
         const mandatoryLabel = condMandatory ? 'Obligatori (data sel.)' : 'Obligatori';
 
         return (
@@ -28,8 +49,24 @@ function ExtrasSection({ venueId, year, date, guests, selectedExtras, extraQuant
                 {getExtraLabel(e.id, lang) || e.label}
                 {isMandatory && <span className="extra-badge badge-mandatory">{mandatoryLabel}</span>}
               </div>
+              
+              {/* 4. Selector de Variants (només si l'extra en té i està actiu/quantitat > 0) */}
+              {e.variants && (e.quantityBased ? quantity > 0 : selectedExtras[e.id]) && (
+                <select 
+                  className="variant-select"
+                  value={extraVariants?.[e.id] || e.variants[0].id}
+                  onChange={(ev) => onVariantChange(e.id, ev.target.value)}
+                  style={{ marginTop: '8px', display: 'block' }}
+                >
+                  {e.variants.map(v => (
+                    <option key={v.id} value={v.id}>{v.label} ({eur(v.price)})</option>
+                  ))}
+                </select>
+              )}
+
               <div className="extra-price">{priceLabel}</div>
             </div>
+            
             {e.quantityBased ? (
               <div className="extra-quantity">
                 <input
@@ -41,7 +78,7 @@ function ExtrasSection({ venueId, year, date, guests, selectedExtras, extraQuant
                   onChange={ev => onQuantityChange(e.id, normalizeQuantity(ev.target.value))}
                   aria-label={`${e.label} quantitat`}
                 />
-                <span className="extra-quantity-unit">{e.unit === 'pack' ? 'pack' : 'pers.'}</span>
+                <span className="extra-quantity-unit">{e.unit === 'unit' ? 'unit.' : 'pack'}</span>
               </div>
             ) : isMandatory ? (
               <div style={{ fontSize: 12, fontFamily: 'var(--font-sans)', letterSpacing: '0.1em', color: 'var(--color-muted)', textTransform: 'uppercase', marginLeft: 16 }}>Inclòs</div>

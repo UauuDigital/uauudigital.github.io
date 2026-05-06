@@ -12,6 +12,27 @@ function App() {
     return { venue: '', date: '', guests: 80, selectedExtras: {}, extraQuantities: {}, coupleName: '', notes: '' };
   }
 
+  function defaultForm() {
+  return { 
+    venue: '', 
+    date: '', 
+    guests: 80, 
+    selectedExtras: {}, 
+    extraQuantities: {}, 
+    extraVariants: { pernil: 'recebo' }, // Estil per defecte
+    coupleName: '', 
+    notes: '' 
+  };
+}
+
+// Afegeix aquesta funció a prop de setExtra
+function setVariant(id, variantId) {
+  setForm(f => ({ 
+    ...f, 
+    extraVariants: { ...f.extraVariants, [id]: variantId } 
+  }));
+}
+
   React.useEffect(() => { localStorage.setItem('uauu-lang', lang); }, [lang]);
 
   function set(key, val) { setForm(f => ({ ...f, [key]: val })); }
@@ -132,8 +153,10 @@ function App() {
             guests={form.guests}
             selectedExtras={form.selectedExtras}
             extraQuantities={form.extraQuantities}
+            extraVariants={form.extraVariants}
             onChange={setExtra}
             onQuantityChange={setQuantity}
+            onVariantChange={setVariant}
             lang={lang}
           />
 
