@@ -40,13 +40,13 @@ const VENUES = [
 const QUANTITY_EXTRAS = {
   2026: [
     { id: 'ressopo',       label: 'Ressopó',        price: 265, unit: 'pack',   quantityBased: true, optional: true },
-    { id: 'menu-staff',    label: 'Menú Staff',     price: 85,  unit: 'person', quantityBased: true, optional: true },
-    { id: 'menu-infantil', label: 'Menú infantil',  price: 65,  unit: 'person', quantityBased: true, optional: true },
+    { id: 'staffmenu',    label: 'Menú Staff',     price: 85,  unit: 'person', quantityBased: true, optional: true },
+    { id: 'childrenmenu', label: 'Menú infantil',  price: 65,  unit: 'person', quantityBased: true, optional: true },
   ],
   2027: [
     { id: 'ressopo',       label: 'Ressopó',        price: 275, unit: 'pack',   quantityBased: true, optional: true },
-    { id: 'menu-staff',    label: 'Menú Staff',     price: 85,  unit: 'person', quantityBased: true, optional: true },
-    { id: 'menu-infantil', label: 'Menú infantil',  price: 68,  unit: 'person', quantityBased: true, optional: true },
+    { id: 'staffmenu',    label: 'Menú Staff',     price: 85,  unit: 'person', quantityBased: true, optional: true },
+    { id: 'childrenmenu', label: 'Menú infantil',  price: 68,  unit: 'person', quantityBased: true, optional: true },
   ],
 };
 
@@ -116,12 +116,12 @@ const PRICE_CONFIG = {
         2026: [
           { id: 'ceremony',     label: 'Cerimònia',     price: 1190, optional: true  },
           { id: 'dj',           label: 'DJ',             price: 1195, optional: false },
-          { id: 'bridal-suite', label: 'Suite Nupcial',  price: 290,  optional: true  },
+          { id: 'bridalsuite', label: 'Suite Nupcial',  price: 290,  optional: true  },
           ...QUANTITY_EXTRAS[2026],
         ],
         2027: [
           { id: 'ceremony',           label: 'Cerimònia',                price: 1740, optional: true  },
-          { id: 'bridal-suite',       label: 'Suite Nupcial',            price: 295,  optional: true  },
+          { id: 'bridalsuite',       label: 'Suite Nupcial',            price: 295,  optional: true  },
           { id: 'essential-services', label: 'Quota serveis essencials', price: 890,  optional: false },
           { id: 'dj',                 label: 'DJ',                       price: 1250, optional: false },
           ...QUANTITY_EXTRAS[2027],
@@ -178,14 +178,14 @@ const PRICE_CONFIG = {
         2026: [
           { id: 'ceremony',          label: 'Cerimònia',          price: 1690, optional: true  },
           { id: 'dj',                label: 'DJ',                  price: 1195, optional: false },
-          { id: 'banquet-exterior',  label: 'Banquet a l\'exterior', price: 2500, optional: true  },
+          { id: 'banquetexterior',  label: 'Banquet a l\'exterior', price: 2500, optional: true  },
           ...QUANTITY_EXTRAS[2026],
         ],
         2027: [
           { id: 'ceremony',          label: 'Cerimònia',                price: 1740, optional: true  },
           { id: 'essential-services',label: 'Quota serveis essencials', price: 1490, optional: false },
           { id: 'dj',                label: 'DJ',                       price: 1250, optional: false },
-          { id: 'banquet-exterior',  label: 'Banquet a l\'exterior',    price: 2500, optional: true  },
+          { id: 'banquetexterior',  label: 'Banquet a l\'exterior',    price: 2500, optional: true  },
           ...QUANTITY_EXTRAS[2027],
         ],
       },
@@ -240,7 +240,7 @@ const PRICE_CONFIG = {
           { id: 'accommodation',    label: 'Allotjament',         price: 1190, optional: true,
             mandatoryWhen: (dow, month) => dow === 6 && [5,6,7,8,9,10].includes(month) },
           // Banquet exterior: 10€/persona, mínim 1500€
-          { id: 'banquet-exterior', label: "Banquet a l'exterior", pricePerPerson: 10, minPrice: 1500, optional: true },
+          { id: 'banquetexterior', label: "Banquet a l'exterior", pricePerPerson: 10, minPrice: 1500, optional: true },
           ...QUANTITY_EXTRAS[2026],
         ],
         2027: [
@@ -249,7 +249,7 @@ const PRICE_CONFIG = {
           { id: 'dj',                 label: 'DJ',                       price: 1250, optional: false },
           { id: 'accommodation',      label: 'Allotjament',              price: 1290, optional: true,
             mandatoryWhen: (dow, month) => dow === 6 && [5,6,7,8,9,10].includes(month) },
-          { id: 'banquet-exterior',   label: "Banquet a l'exterior",     pricePerPerson: 10, minPrice: 1500, optional: true },
+          { id: 'banquetexterior',   label: "Banquet a l'exterior",     pricePerPerson: 10, minPrice: 1500, optional: true },
           ...QUANTITY_EXTRAS[2027],
         ],
       },
@@ -302,7 +302,7 @@ const PRICE_CONFIG = {
           { id: 'dj',            label: 'DJ',                 price: 1195, optional: false },
           { id: 'accommodation', label: 'Allotjament',        price: 1290, optional: true,
             mandatoryWhen: (dow, month) => dow === 6 && [5,6,7,8,9,10].includes(month) },
-          { id: 'garden-aperitif', label: "Aperitiu al jardí", pricePerPerson: 10, minPrice: 1000, optional: true },
+          { id: 'gardenaperitif', label: "Aperitiu al jardí", pricePerPerson: 10, minPrice: 1000, optional: true },
           ...QUANTITY_EXTRAS[2026],
         ],
         2027: [
@@ -311,7 +311,7 @@ const PRICE_CONFIG = {
           { id: 'dj',                 label: 'DJ',                       price: 1250, optional: false },
           { id: 'accommodation',      label: 'Allotjament',              price: 1390, optional: true,
             mandatoryWhen: (dow, month) => dow === 6 && [5,6,7,8,9,10].includes(month) },
-          { id: 'garden-aperitif',    label: "Aperitiu al jardí",        pricePerPerson: 10, minPrice: 1000, optional: true },
+          { id: 'gardenaperitif',    label: "Aperitiu al jardí",        pricePerPerson: 10, minPrice: 1000, optional: true },
           ...QUANTITY_EXTRAS[2027],
         ],
       },
@@ -359,7 +359,13 @@ const T = {
     months:          ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'],
     supper:          'Ressopó',
     staffmenu:       'Menú Staff',
-    childrenmenu:     'Menú infantil',
+    childrenmenu:    'Menú infantil',
+    essentialQuota:  'Quota serveis essencials',
+    ceremony:        'Cerimònia',
+    bridalsuite:     'La Suite',
+    banquetexterior: 'Banquet a l\'exterior',
+    accommodation:   'Allotjament',
+    gardenaperitif:  'Aperitiu al jardí',
   },
   es: {
     exportBtn:       'Exportar PDF',
@@ -396,7 +402,13 @@ const T = {
     months:          ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
     supper:          'Resopó',
     staffmenu:       'Menú Staff',
-    childrenmenu:     'Menú infantil',
+    childrenmenu:    'Menú infantil',
+    essentialQuota:  'Cuota servicios esenciales',
+    ceremony:        'Cerimonia',
+    bridalsuite:     'La Suite',
+    banquetexterior: 'Banquete al exterior',
+    accommodation:   'Alojamiento',
+    gardenaperitif:  'Aperitivo al jardin',
   },
   en: {
     exportBtn:       'Export PDF',
@@ -433,7 +445,13 @@ const T = {
     months:          ['January','February','March','April','May','June','July','August','September','October','November','December'],
     supper:          'Late night snack',
     staffmenu:       'Staff menu',
-    childrenmenu:     'Children menu',
+    childrenmenu:    'Children menu',
+    essentialQuota:  'Essential services fee',
+    ceremony:        'Ceremony',
+    bridalsuite:     'The Suite',
+    banquetexterior: 'Outdoor banquet',
+    accommodation:   'Accommodation',
+    gardenaperitif:  'Garden Aperitif',
   },
 };
 
@@ -518,8 +536,14 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
 function getExtraLabel(extraId, lang) {
   const idToKey = {
     'ressopo': 'supper',
-    'menu-staff': 'staffmenu',
-    'menu-infantil': 'childrenmenu',
+    'staffmenu': 'staffmenu',
+    'childrenmenu': 'childrenmenu',
+    'essential-services': 'essentialQuota',
+    'ceremony': 'ceremony',
+    'bridalsuite': 'bridalsuite',
+    'banquetexterior': 'banquetexterior',
+    'accommodation': 'accommodation',
+    'gardenaperitif': 'gardenaperitif',
   };
   const key = idToKey[extraId];
   return key ? T[lang]?.[key] : null;
