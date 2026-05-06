@@ -42,11 +42,35 @@ const QUANTITY_EXTRAS = {
     { id: 'ressopo',       label: 'Ressopó',        price: 265, unit: 'pack',   quantityBased: true, optional: true },
     { id: 'staffmenu',    label: 'Menú Staff',     price: 85,  unit: 'person', quantityBased: true, optional: true },
     { id: 'childrenmenu', label: 'Menú infantil',  price: 65,  unit: 'person', quantityBased: true, optional: true },
+    { id: 'sushi',         label: 'Sushi',                                                           optional: true,
+      pricingFn: guests => {
+        if (guests < 35) return 0;
+        if (guests <= 80) return 750;
+        return 750 + (guests - 80) * 4;
+      },
+      pricingFnDetail: guests => {
+       if (guests < 35) return null;
+       if (guests <= 80) return '750€';
+       return `750€ + ${guests - 80}pers. × 4€`;  
+      }
+    },
   ],
   2027: [
     { id: 'ressopo',       label: 'Ressopó',        price: 275, unit: 'pack',   quantityBased: true, optional: true },
     { id: 'staffmenu',    label: 'Menú Staff',     price: 85,  unit: 'person', quantityBased: true, optional: true },
     { id: 'childrenmenu', label: 'Menú infantil',  price: 68,  unit: 'person', quantityBased: true, optional: true },
+    { id: 'sushi',         label: 'Sushi',                                                           optional: true,
+      pricingFn: guests => {
+        if (guests < 35) return 0;
+        if (guests <= 80) return 750;
+        return 750 + (guests - 80) * 4;
+      },
+      pricingFnDetail: guests => {
+       if (guests < 35) return null;
+       if (guests <= 80) return '750€';
+       return `750€ + ${guests - 80}pers. × 4€`;  
+      }
+    },
   ],
 };
 
@@ -506,16 +530,26 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
     const included = e.quantityBased
       ? true
       : (isMandatory || selectedExtras[e.id] === true);
-    const computedPrice = e.quantityBased
-      ? quantity * (e.price || 0)
-      : (e.pricePerPerson
-        ? Math.max(guests * e.pricePerPerson, e.minPrice || 0)
-        : (e.price || 0));
-    const priceDetail = e.quantityBased
-      ? `${quantity} ${quantity === 1 ? 'pack' : 'packs'} × ${eur(e.price)}`
-      : (e.pricePerPerson
-        ? `${guests} pers. × ${eur(e.pricePerPerson)} (mínim ${eur(e.minPrice)})`
-        : null);
+    
+    let computedPrice = 0;
+    let priceDetail = null;
+    
+    if (e.quantityBased) {
+      computedPrice = quantity * (e.price || 0);
+      priceDetail = `${quantity} ${quantity === 1 ? 'pack' : 'packs'} × ${eur(e.price)}`;
+    } else if (e.pricingFn) {
+    // Li passem el 'guests' que ve del slider de la pàgina
+    computedPrice = e.pricingFn(guests) || 0;
+    priceDetail = e.pricingFnDetail ? e.pricingFnDetail(guests) : null;
+    } 
+    else if (e.pricePerPerson) {
+      computedPrice = Math.max(guests * e.pricePerPerson, e.minPrice || 0);
+      priceDetail = `${guests} pers. × ${eur(e.pricePerPerson)} (mínim ${eur(e.minPrice)})`;
+    } 
+    else {
+      computedPrice = e.price || 0;
+    }
+    
     return { ...e, isMandatory, condMandatory, included, computedPrice, priceDetail };
   }).filter(e => e.included);
 
