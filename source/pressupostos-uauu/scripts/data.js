@@ -1,14 +1,41 @@
 ﻿
 
 // ================================================================
-//  TAULES DE PREUS — Editar aquí per configurar tarifes
-//  Estructura: priceMatrix[any][diaDeLaSetmana] = llista de { months, price, minGuests }
+//  DATA CONFIGURATION FILE
+//  Structure: priceMatrix, venues, extras, translations
 //  diaDeLaSetmana: 0=Diumenge, 1=Dl, 2=Dm, 3=Dc, 4=Dj, 5=Dv, 6=Ds
-//  extras[any] = llista de { id, label, price, optional }
-//    optional: true = el client pot triar; false = sempre inclòs (obligatori)
-//    quantityBased: true = el preu es calcula amb una quantitat introduïda
-//  minimumPenaltyPerPerson: preu/persona cobrat per sota del mínim
 // ================================================================
+
+// ────────────────────────────────────────────────────────────────
+// 1. BASIC CONSTANTS
+// ────────────────────────────────────────────────────────────────
+
+const MONTHS_CA = ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
+const DAYS_CA   = ['Diumenge','Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte'];
+const DAYS_SHORT = ['Dg','Dl','Dm','Dc','Dj','Dv','Ds'];
+
+// ────────────────────────────────────────────────────────────────
+// 2. UTILITY FUNCTIONS
+// ────────────────────────────────────────────────────────────────
+
+function eur(n) {
+  return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
+}
+
+// ────────────────────────────────────────────────────────────────
+// 3. VENUES REFERENCE DATA
+// ────────────────────────────────────────────────────────────────
+
+const VENUES = [
+  { id: 'mas-vivencs',     name: 'Mas Vivencs',      logo: 'assets/logo-mas-vivencs.png',      type: 'Mas Rural'        },
+  { id: 'castell-de-tous', name: 'Castell de Tous',  logo: 'assets/logo-castell-de-tous.png',  type: 'Castell Històric' },
+  { id: 'can-macia',       name: 'Can Macià',         logo: 'assets/logo-can-macia.png',        type: 'Masia Rural'      },
+  { id: 'ca-nalzina',      name: "Ca n'Alzina",       logo: 'assets/logo-ca-nalzina.png',       type: 'Masia Rural'      },
+];
+
+// ────────────────────────────────────────────────────────────────
+// 4. QUANTITY-BASED EXTRAS (used in pricing config)
+// ────────────────────────────────────────────────────────────────
 
 const QUANTITY_EXTRAS = {
   2026: [
@@ -23,8 +50,18 @@ const QUANTITY_EXTRAS = {
   ],
 };
 
-const PRICE_CONFIG = {
+// ────────────────────────────────────────────────────────────────
+// 5. PRICE CONFIGURATION & VENUE-SPECIFIC PRICING
+// ────────────────────────────────────────────────────────────────
+//  priceMatrix[year][dayOfWeek] = list of { months, price, minGuests }
+//  extras[year] = list of { id, label, price, optional }
+//    optional: true = client can choose; false = always included (mandatory)
+//    quantityBased: true = price calculated with input quantity
+//    pricePerPerson = alternative pricing model (price per guest)
+//  minimumPenaltyPerPerson = charge per person below minimum
+// ────────────────────────────────────────────────────────────────
 
+const PRICE_CONFIG = {
   vatRate: 0.10,  // IVA (10%)
 
   venues: {
@@ -282,26 +319,10 @@ const PRICE_CONFIG = {
   },
 };
 
-// ================================================================
-//  FI TAULES DE PREUS
-// ================================================================
+// ────────────────────────────────────────────────────────────────
+// 6. TRANSLATIONS
+// ────────────────────────────────────────────────────────────────
 
-const VENUES = [
-  { id: 'mas-vivencs',     name: 'Mas Vivencs',      logo: 'assets/logo-mas-vivencs.png',      type: 'Mas Rural'        },
-  { id: 'castell-de-tous', name: 'Castell de Tous',  logo: 'assets/logo-castell-de-tous.png',  type: 'Castell Històric' },
-  { id: 'can-macia',       name: 'Can Macià',         logo: 'assets/logo-can-macia.png',        type: 'Masia Rural'      },
-  { id: 'ca-nalzina',      name: "Ca n'Alzina",       logo: 'assets/logo-ca-nalzina.png',       type: 'Masia Rural'      },
-];
-
-const MONTHS_CA = ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
-const DAYS_CA   = ['Diumenge','Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte'];
-const DAYS_SHORT = ['Dg','Dl','Dm','Dc','Dj','Dv','Ds'];
-
-function eur(n) {
-  return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
-}
-
-// ── Translations ─────────────────────────────────────────────────
 const T = {
   ca: {
     exportBtn:       'Exportar PDF',
@@ -416,6 +437,9 @@ const T = {
   },
 };
 
+// ────────────────────────────────────────────────────────────────
+// 7. BUSINESS LOGIC & CALCULATION FUNCTIONS
+// ────────────────────────────────────────────────────────────────
 
 function lookupPrice(venueId, year, month, dow) {
   const v = PRICE_CONFIG.venues[venueId];
@@ -491,10 +515,6 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
   };
 }
 
-// ================================================================
-//  TRADUCCIONS DELS EXTRAS PER QUANTITAT
-// ================================================================
-
 function getExtraLabel(extraId, lang) {
   const idToKey = {
     'ressopo': 'supper',
@@ -504,5 +524,3 @@ function getExtraLabel(extraId, lang) {
   const key = idToKey[extraId];
   return key ? T[lang]?.[key] : null;
 }
-
-

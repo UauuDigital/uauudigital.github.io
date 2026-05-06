@@ -19,7 +19,7 @@ Aplicació web estàtica pensada per a GitHub Pages.
 - **Traduccions**: `source/pressupostos-uauu/scripts/i18n/translations.js`
 
 ### Lògica de negoci
-- **Calculadora de pressupostos**: `source/pressupostos-uauu/scripts/lib/quoteCalculator.js`
+- **Datos & Configuración**: `source/pressupostos-uauu/scripts/data.js` (precios, fincas, traducciones, funciones de cálculo)
 - **Formatadors (EUR)**: `source/pressupostos-uauu/scripts/lib/formatters.js`
 - **Generador PDF**: `source/pressupostos-uauu/scripts/lib/pdfGenerator.js`
 
