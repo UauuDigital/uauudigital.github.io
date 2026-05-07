@@ -5,26 +5,31 @@ const PDF_STYLES = `
   body {
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-weight: 300;
-    font-size: 17px;
-    line-height: 1.55;
+    font-size: 16px;
+    line-height: 1.4;
     color: #1c1c1a;
     background: #fff;
     -webkit-font-smoothing: antialiased;
   }
 
   /* Layout */
-  .wrap { max-width: 620px; margin: 0 auto; padding: 40px 50px 35px; }
-  .divider { height: 1px; background: #eaeced; margin: 20px 0; }
+  .wrap {
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 28px 34px 24px;
+    transform-origin: top left;
+  }
+  .divider { height: 1px; background: #eaeced; margin: 14px 0; }
 
   /* Header */
   .hdr {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 48px;
+    margin-bottom: 30px;
   }
   .brand { font-family: system-ui, sans-serif; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #7e8c8d; margin-bottom: 6px; }
-  .title-pdf { font-size: 28px; font-weight: 300; font-style: italic; }
+  .title-pdf { font-size: 24px; font-weight: 300; font-style: italic; }
   .ref-label { font-family: system-ui, sans-serif; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: #7e8c8d; margin-bottom: 3px; text-align: right; }
   .ref-val { font-size: 14px; font-weight: 400; text-align: right; }
   .ref-date { font-family: system-ui, sans-serif; font-size: 11px; color: #7e8c8d; margin-top: 3px; text-align: right; }
@@ -33,15 +38,15 @@ const PDF_STYLES = `
   .meta-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px 48px;
-    margin-bottom: 25px;
+    gap: 10px 32px;
+    margin-bottom: 18px;
   }
   .meta-label { font-family: system-ui, sans-serif; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #7e8c8d; margin-bottom: 3px; }
-  .meta-val { font-size: 17px; font-weight: 400; }
-  .meta-val-i { font-size: 17px; font-weight: 300; font-style: italic; }
+  .meta-val { font-size: 15px; font-weight: 400; }
+  .meta-val-i { font-size: 15px; font-weight: 300; font-style: italic; }
 
   /* Table */
-  .tbl-label { font-family: system-ui, sans-serif; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #7e8c8d; margin-bottom: 8px; }
+  .tbl-label { font-family: system-ui, sans-serif; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #7e8c8d; margin-bottom: 6px; }
   table { width: 100%; border-collapse: collapse; }
   th {
     font-family: system-ui, sans-serif;
@@ -57,21 +62,21 @@ const PDF_STYLES = `
   th:last-child { text-align: right; }
 
   /* Table cells */
-  .td-l { padding: 8px 0; border-bottom: 1px solid #eaeced; font-size: 15px; font-weight: 300; color: #515856; vertical-align: top; }
+  .td-l { padding: 6px 0; border-bottom: 1px solid #eaeced; font-size: 14px; font-weight: 300; color: #515856; vertical-align: top; }
   .td-sub { font-family: system-ui, sans-serif; font-size: 10px; color: #7e8c8d; margin-top: 2px; letter-spacing: 0.05em; }
-  .td-r { padding: 8px 0; border-bottom: 1px solid #eaeced; text-align: right; font-size: 15px; font-weight: 400; white-space: nowrap; vertical-align: top; }
-  .td-muted { font-size: 13px; color: #7e8c8d; padding: 6px 0; border-bottom: 1px solid #eaeced; }
-  .td-muted-r { font-size: 13px; color: #7e8c8d; padding: 6px 0; border-bottom: 1px solid #eaeced; text-align: right; }
+  .td-r { padding: 6px 0; border-bottom: 1px solid #eaeced; text-align: right; font-size: 14px; font-weight: 400; white-space: nowrap; vertical-align: top; }
+  .td-muted { font-size: 12px; color: #7e8c8d; padding: 5px 0; border-bottom: 1px solid #eaeced; }
+  .td-muted-r { font-size: 12px; color: #7e8c8d; padding: 5px 0; border-bottom: 1px solid #eaeced; text-align: right; }
 
   /* Total row */
-  .total-td { padding: 15px 0; border-top: 2px solid #1c1c1a; }
+  .total-td { padding: 12px 0; border-top: 2px solid #1c1c1a; }
   .t-label { font-family: system-ui, sans-serif; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #7e8c8d; margin-bottom: 3px; }
-  .t-amount { font-size: 28px; font-weight: 300; }
+  .t-amount { font-size: 24px; font-weight: 300; }
   .t-pp { font-size: 12px; font-style: italic; color: #7e8c8d; margin-top: 2px; }
 
   /* Notes & Footer */
-  .notes { margin-top: 18px; padding: 12px; background: #f5f2ed; border-radius: 4px; font-size: 13px; font-style: italic; color: #515856; line-height: 1.5; }
-  .footer { margin-top: 25px; padding-top: 12px; border-top: 1px solid #eaeced; display: flex; justify-content: space-between; align-items: flex-end; }
+  .notes { margin-top: 12px; padding: 10px 12px; background: #f5f2ed; border-radius: 4px; font-size: 12px; font-style: italic; color: #515856; line-height: 1.35; }
+  .footer { margin-top: 16px; padding-top: 10px; border-top: 1px solid #eaeced; display: flex; justify-content: space-between; align-items: flex-end; }
   .footer-l { font-family: system-ui, sans-serif; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: #7e8c8d; margin-bottom: 2px; }
   .footer-v { font-size: 11px; font-style: italic; color: #7e8c8d; }
   .footer-r { font-family: system-ui, sans-serif; font-size: 9px; color: #7e8c8d; text-align: right; line-height: 1.5; }

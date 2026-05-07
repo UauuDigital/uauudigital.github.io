@@ -14,8 +14,31 @@ function SummaryPanel({ form, quote, lang }) {
     const w = window.open('', '_blank');
     w.document.write(pdfHTML({ form, quote, venue, dateStr, coupleStr, refNum, today, t, lang }));
     w.document.close();
-    w.focus();
-    setTimeout(() => w.print(), 700);
+
+    const fitToOnePage = () => {
+      const wrap = w.document.querySelector('.wrap');
+      if (!wrap) return;
+
+      const pageWidth = 2100;  // 210mm at 10px/mm
+      const pageHeight = 2970; // 297mm at 10px/mm
+      const paddingY = 0;
+      const availableHeight = pageHeight - paddingY;
+      const naturalHeight = wrap.scrollHeight;
+      const naturalWidth = wrap.scrollWidth;
+      const scale = Math.min(1, availableHeight / naturalHeight, pageWidth / naturalWidth);
+
+      wrap.style.width = '210mm';
+      wrap.style.transform = `scale(${scale})`;
+      wrap.style.height = `${Math.ceil(naturalHeight * scale)}px`;
+      w.document.body.style.overflow = 'hidden';
+      w.document.documentElement.style.overflow = 'hidden';
+    };
+
+    w.onload = () => {
+      fitToOnePage();
+      w.focus();
+      setTimeout(() => w.print(), 300);
+    };
   }
 
   return (
