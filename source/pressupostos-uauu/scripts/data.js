@@ -105,6 +105,8 @@ const QUANTITY_EXTRAS = {
       ]
     },
     { id: 'candybar',     label: 'Candy bar',      price: 420,                                      optional: true },
+    { id: 'cookiebar',    label: 'Cookie bar',     price: 320, extraPackPrice: 50, unit: 'pack', quantityBased: true, optional: true },
+
   ],
 };
 
