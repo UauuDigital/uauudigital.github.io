@@ -12,11 +12,50 @@ function App() {
     return { venue: '', date: '', guests: 80, selectedExtras: {}, extraQuantities: {}, coupleName: '', notes: '' };
   }
 
+  function defaultForm() {
+  return { 
+    venue: '', 
+    date: '', 
+    guests: 80, 
+    selectedExtras: {}, 
+    extraQuantities: {}, 
+    extraOptions: {},
+    extraVariants: { pernil: 'res' }, // Estil per defecte
+    coupleName: '', 
+    notes: '' 
+  };
+}
+
+// Afegeix aquesta funció a prop de setExtra
+function setVariant(id, variantId) {
+  setForm(f => ({ 
+    ...f, 
+    extraVariants: { ...f.extraVariants, [id]: variantId } 
+  }));
+}
+
   React.useEffect(() => { localStorage.setItem('uauu-lang', lang); }, [lang]);
 
   function set(key, val) { setForm(f => ({ ...f, [key]: val })); }
-  function setExtra(id, val) { setForm(f => ({ ...f, selectedExtras: { ...f.selectedExtras, [id]: val } })); }
+  function setExtra(id, val) {
+    setForm(f => ({
+      ...f,
+      selectedExtras: { ...f.selectedExtras, [id]: val },
+      extraQuantities: val || id !== 'cookiebar'
+        ? f.extraQuantities
+        : { ...f.extraQuantities, [id]: 0 }
+    }));
+  }
   function setQuantity(id, val) { setForm(f => ({ ...f, extraQuantities: { ...f.extraQuantities, [id]: val } })); }
+  function setExtraOption(id, key, value) {
+    setForm(f => ({
+      ...f,
+      extraOptions: {
+        ...f.extraOptions,
+        [id]: { ...(f.extraOptions?.[id] || {}), [key]: value }
+      }
+    }));
+  }
 
   const dateYear = form.date ? new Date(form.date + 'T12:00:00').getFullYear() : null;
   const menuStaffExtra = getQuantityExtra(form.venue, dateYear, 'menu-staff');
@@ -132,8 +171,12 @@ function App() {
             guests={form.guests}
             selectedExtras={form.selectedExtras}
             extraQuantities={form.extraQuantities}
+            extraOptions={form.extraOptions}
+            extraVariants={form.extraVariants}
             onChange={setExtra}
             onQuantityChange={setQuantity}
+            onOptionChange={setExtraOption}
+            onVariantChange={setVariant}
             lang={lang}
           />
 

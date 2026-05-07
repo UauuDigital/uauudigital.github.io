@@ -27,8 +27,8 @@ function eur(n) {
 // ────────────────────────────────────────────────────────────────
 
 const VENUES = [
-  { id: 'mas-vivencs',     name: 'Mas Vivencs',      logo: 'assets/logo-mas-vivencs.png',      type: 'Mas Rural'        },
-  { id: 'castell-de-tous', name: 'Castell de Tous',  logo: 'assets/logo-castell-de-tous.png',  type: 'Castell Històric' },
+  { id: 'mas-vivencs',     name: 'Mas Vivencs',       logo: 'assets/logo-mas-vivencs.png',      type: 'Mas Rural'        },
+  { id: 'castell-de-tous', name: 'Castell de Tous',   logo: 'assets/logo-castell-de-tous.png',  type: 'Castell Històric' },
   { id: 'can-macia',       name: 'Can Macià',         logo: 'assets/logo-can-macia.png',        type: 'Masia Rural'      },
   { id: 'ca-nalzina',      name: "Ca n'Alzina",       logo: 'assets/logo-ca-nalzina.png',       type: 'Masia Rural'      },
 ];
@@ -39,14 +39,80 @@ const VENUES = [
 
 const QUANTITY_EXTRAS = {
   2026: [
-    { id: 'ressopo',       label: 'Ressopó',        price: 265, unit: 'pack',   quantityBased: true, optional: true },
+    { id: 'ressopo',      label: 'Ressopó',        price: 265, unit: 'pack',   quantityBased: true, optional: true },
     { id: 'staffmenu',    label: 'Menú Staff',     price: 85,  unit: 'person', quantityBased: true, optional: true },
     { id: 'childrenmenu', label: 'Menú infantil',  price: 65,  unit: 'person', quantityBased: true, optional: true },
+    { id: 'sushi',        label: 'Sushi',          price: 750,                                      optional: true,
+      pricingFn: guests => {
+        if (guests < 35) return 0;
+        if (guests <= 80) return 750;
+        return 750 + (guests - 80) * 4;
+      },
+      pricingFnDetail: guests => {
+       if (guests < 35) return null;
+       if (guests <= 80) return '750€';
+       return `750€ + ${guests - 80}pers. × 4€`;  
+      }
+    },
+    { id: 'pernil',       label: 'Pernil amb pa amb tomàquet', unit: 'unit',                        optional: true,
+      variants: [
+        { id: 'res',                  labelKey: ' ',                          price: 0    },
+        { id: 'espatllaibericacebo',  labelKey: 'Espatlla ibèrica de cebo',   price: 580  },
+        { id: 'espatllaibericagla',   labelKey: 'Espatlla ibèrica de gla 5J', price: 690  },
+        { id: 'pernilibericcebo',     labelKey: 'Pernil ibèric de cebo:',     price: 765  },
+        { id: 'pernilibericgla',      labelKey: 'Pernil ibèric de gla 5J',    price: 1150 }
+      ]
+    },
+    { id: 'baobar',       label: 'Bao bar',        price: 590,                                      optional: true,
+      pricingFn: guests => {
+        if (guests < 35) return 0;
+        if (guests <= 80) return 590;
+        return 590 + (guests - 80) * 2.5;
+      },
+      pricingFnDetail: guests => {
+       if (guests < 35) return null;
+       if (guests <= 80) return '590';
+       return `590€ + ${guests - 80}pers. × 2.5€`;  
+      }
+    },
+    { id: 'candybar',     label: 'Candy bar',      price: 420,                                      optional: true },
+    { id: 'cookiebar',    label: 'Cookie bar',     price: 320, extraPackPrice: 50, unit: 'pack', quantityBased: true, optional: true },
+    { id: 'barlliure',    label: 'Barra lliure',   optional: true,
+      pricingFn: guests => 0,
+    },
+
   ],
   2027: [
-    { id: 'ressopo',       label: 'Ressopó',        price: 275, unit: 'pack',   quantityBased: true, optional: true },
+    { id: 'ressopo',      label: 'Ressopó',        price: 275, unit: 'pack',   quantityBased: true, optional: true },
     { id: 'staffmenu',    label: 'Menú Staff',     price: 85,  unit: 'person', quantityBased: true, optional: true },
     { id: 'childrenmenu', label: 'Menú infantil',  price: 68,  unit: 'person', quantityBased: true, optional: true },
+    { id: 'sushi',        label: 'Sushi',          price: 750,                                      optional: true,
+      pricingFn: guests => {
+        if (guests < 35) return 0;
+        if (guests <= 80) return 750;
+        return 750 + (guests - 80) * 4;
+      },
+      pricingFnDetail: guests => {
+       if (guests < 35) return null;
+       if (guests <= 80) return '750€';
+       return `750€ + ${guests - 80}pers. × 4€`;  
+      }
+    },
+    { id: 'pernil',       label: 'Pernil amb pa amb tomàquet', unit: 'unit',                        optional: true,
+      variants: [
+        { id: 'res',                  labelKey: ' ',                          price: 0    },
+        { id: 'espatllaibericacebo',  labelKey: 'Espatlla ibèrica de cebo',   price: 620  },
+        { id: 'espatllaibericagla',   labelKey: 'Espatlla ibèrica de gla 5J', price: 730  },
+        { id: 'pernilibericcebo',     labelKey: 'Pernil ibèric de cebo:',     price: 790  },
+        { id: 'pernilibericgla',      labelKey: 'Pernil ibèric de gla 5J',    price: 1195 }
+      ]
+    },
+    { id: 'candybar',     label: 'Candy bar',      price: 420,                                      optional: true },
+    { id: 'cookiebar',    label: 'Cookie bar',     price: 320, extraPackPrice: 50, unit: 'pack', quantityBased: true, optional: true },
+    { id: 'barlliure',    label: 'Barra lliure',   optional: true,
+      pricingFn: guests => 0,
+    },
+
   ],
 };
 
@@ -341,31 +407,36 @@ const T = {
     minWarn:         (min, pen) => `Per sota del mínim de ${min} convidats. S'aplica suplement de ${eur(pen)}/pers.`,
     note:            'Pressupost orientatiu i no vinculant.',
     // PDF
-    pdfTitle:        'Pressupost Estimat',
-    refLabel:        'Referència',
-    coupleLabel:     'La Parella',
-    dateLabel:       'Data de la Boda',
-    venueLabel:      'Finca',
-    guestsLabel:     'Convidats',
-    guestsUnit:      n => `${n} persones`,
-    detailLabel:     'Detall del Pressupost',
-    conceptCol:      'Concepte',
-    amountCol:       'Import',
-    pdfMenuDetail:   (n, ppp) => `${n} convidats × ${eur(ppp)}/pers.`,
-    pdfMinDetail:    (short, pen) => `${short} persones × ${eur(pen)}`,
-    pdfMandatory:    'obligatori',
-    footerNote:      'Pressupost orientatiu i no vinculant.',
-    locale:          'ca-ES',
-    months:          ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'],
-    supper:          'Ressopó',
-    staffmenu:       'Menú Staff',
-    childrenmenu:    'Menú infantil',
-    essentialQuota:  'Quota serveis essencials',
-    ceremony:        'Cerimònia',
-    bridalsuite:     'La Suite',
-    banquetexterior: 'Banquet a l\'exterior',
-    accommodation:   'Allotjament',
-    gardenaperitif:  'Aperitiu al jardí',
+    pdfTitle:            'Pressupost Estimat',
+    refLabel:            'Referència',
+    coupleLabel:         'La Parella',
+    dateLabel:           'Data de la Boda',
+    venueLabel:          'Finca',
+    guestsLabel:         'Convidats',
+    guestsUnit:          n => `${n} persones`,
+    detailLabel:         'Detall del Pressupost',
+    conceptCol:          'Concepte',
+    amountCol:           'Import',
+    pdfMenuDetail:       (n, ppp) => `${n} convidats × ${eur(ppp)}/pers.`,
+    pdfMinDetail:        (short, pen) => `${short} persones × ${eur(pen)}`,
+    pdfMandatory:        'obligatori',
+    footerNote:          'Pressupost orientatiu i no vinculant.',
+    locale:              'ca-ES',
+    months:              ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'],
+    supper:              'Ressopó',
+    staffmenu:           'Menú Staff',
+    childrenmenu:        'Menú infantil',
+    essentialQuota:      'Quota serveis essencials',
+    ceremony:            'Cerimònia',
+    bridalsuite:         'La Suite',
+    banquetexterior:     'Banquet a l\'exterior',
+    accommodation:       'Allotjament',
+    gardenaperitif:      'Aperitiu al jardí',
+    espatllaibericacebo: 'Espatlla ibèrica de cebo',
+    espatllaibericagla:  'Espatlla ibèrica de gla 5J',
+    pernilibericcebo:    'Pernil ibèric de cebo',
+    pernilibericgla:     'Pernil ibèric de gla 5J',
+    pernil:              'Pernil amb pa amb tomàquet',
   },
   es: {
     exportBtn:       'Exportar PDF',
@@ -384,31 +455,36 @@ const T = {
     minWarn:         (min, pen) => `Por debajo del mínimo de ${min} invitados. Se aplica suplemento de ${eur(pen)}/pers.`,
     note:            'Presupuesto orientativo y no vinculante.',
     // PDF
-    pdfTitle:        'Presupuesto Estimado',
-    refLabel:        'Referencia',
-    coupleLabel:     'La Pareja',
-    dateLabel:       'Fecha de la Boda',
-    venueLabel:      'Finca',
-    guestsLabel:     'Invitados',
-    guestsUnit:      n => `${n} personas`,
-    detailLabel:     'Detalle del Presupuesto',
-    conceptCol:      'Concepto',
-    amountCol:       'Importe',
-    pdfMenuDetail:   (n, ppp) => `${n} invitados × ${eur(ppp)}/pers.`,
-    pdfMinDetail:    (short, pen) => `${short} personas × ${eur(pen)}`,
-    pdfMandatory:    'obligatorio',
-    footerNote:      'Presupuesto orientativo y no vinculante.',
-    locale:          'es-ES',
-    months:          ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
-    supper:          'Resopó',
-    staffmenu:       'Menú Staff',
-    childrenmenu:    'Menú infantil',
-    essentialQuota:  'Cuota servicios esenciales',
-    ceremony:        'Cerimonia',
-    bridalsuite:     'La Suite',
-    banquetexterior: 'Banquete al exterior',
-    accommodation:   'Alojamiento',
-    gardenaperitif:  'Aperitivo al jardin',
+    pdfTitle:            'Presupuesto Estimado',
+    refLabel:            'Referencia',
+    coupleLabel:         'La Pareja',
+    dateLabel:           'Fecha de la Boda',
+    venueLabel:          'Finca',
+    guestsLabel:         'Invitados',
+    guestsUnit:          n => `${n} personas`,
+    detailLabel:         'Detalle del Presupuesto',
+    conceptCol:          'Concepto',
+    amountCol:           'Importe',
+    pdfMenuDetail:       (n, ppp) => `${n} invitados × ${eur(ppp)}/pers.`,
+    pdfMinDetail:        (short, pen) => `${short} personas × ${eur(pen)}`,
+    pdfMandatory:        'obligatorio',
+    footerNote:          'Presupuesto orientativo y no vinculante.',
+    locale:              'es-ES',
+    months:              ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+    supper:              'Resopó',
+    staffmenu:           'Menú Staff',
+    childrenmenu:        'Menú infantil',
+    essentialQuota:      'Cuota servicios esenciales',
+    ceremony:            'Cerimonia',
+    bridalsuite:         'La Suite',
+    banquetexterior:     'Banquete al exterior',
+    accommodation:       'Alojamiento',
+    gardenaperitif:      'Aperitiu al jardí',
+    espatllaibericacebo: 'Paletilla ibérica de cebo',
+    espatllaibericagla:  'Paletilla ibérica de bellotaj 5J',
+    pernilibericcebo:    'Jamón ibérico de cebo',
+    pernilibericgla:     'Jamón ibérico 5J de bellota',
+    pernil:              'Jamón con pan con tomate',
   },
   en: {
     exportBtn:       'Export PDF',
@@ -427,31 +503,37 @@ const T = {
     minWarn:         (min, pen) => `Below minimum of ${min} guests. A supplement of ${eur(pen)}/person applies.`,
     note:            'Indicative and non-binding estimate.',
     // PDF
-    pdfTitle:        'Estimated Budget',
-    refLabel:        'Reference',
-    coupleLabel:     'The Couple',
-    dateLabel:       'Wedding Date',
-    venueLabel:      'Venue',
-    guestsLabel:     'Guests',
-    guestsUnit:      n => `${n} people`,
-    detailLabel:     'Budget Details',
-    conceptCol:      'Item',
-    amountCol:       'Amount',
-    pdfMenuDetail:   (n, ppp) => `${n} guests × ${eur(ppp)}/person`,
-    pdfMinDetail:    (short, pen) => `${short} persons × ${eur(pen)}`,
-    pdfMandatory:    'mandatory',
-    footerNote:      'Indicative and non-binding estimate.',
-    locale:          'en-GB',
-    months:          ['January','February','March','April','May','June','July','August','September','October','November','December'],
-    supper:          'Late night snack',
-    staffmenu:       'Staff menu',
-    childrenmenu:    'Children menu',
-    essentialQuota:  'Essential services fee',
-    ceremony:        'Ceremony',
-    bridalsuite:     'The Suite',
-    banquetexterior: 'Outdoor banquet',
-    accommodation:   'Accommodation',
-    gardenaperitif:  'Garden Aperitif',
+    pdfTitle:            'Estimated Budget',
+    refLabel:            'Reference',
+    coupleLabel:         'The Couple',
+    dateLabel:           'Wedding Date',
+    venueLabel:          'Venue',
+    guestsLabel:         'Guests',
+    guestsUnit:          n => `${n} people`,
+    detailLabel:         'Budget Details',
+    conceptCol:          'Item',
+    amountCol:           'Amount',
+    pdfMenuDetail:       (n, ppp) => `${n} guests × ${eur(ppp)}/person`,
+    pdfMinDetail:        (short, pen) => `${short} persons × ${eur(pen)}`,
+    pdfMandatory:        'mandatory',
+    footerNote:          'Indicative and non-binding estimate.',
+    locale:              'en-GB',
+    months:              ['January','February','March','April','May','June','July','August','September','October','November','December'],
+    supper:              'Late night snack',
+    staffmenu:           'Staff menu',
+    childrenmenu:        'Children menu',
+    essentialQuota:      'Essential services fee',
+    ceremony:            'Ceremony',
+    bridalsuite:         'The Suite',
+    banquetexterior:     'Outdoor banquet',
+    accommodation:       'Accommodation',
+    gardenaperitif:      'Garden Aperitif',
+    gardenaperitif:      'Aperitiu al jardí',
+    espatllaibericacebo: 'Iberian shoulder ham',
+    espatllaibericagla:  '5J Iberian shoulder ham',
+    pernilibericcebo:    'Iberian ham',
+    pernilibericgla:     '5J Iberian ham',
+    pernil:              'Ham with tomato bread',
   },
 };
 
@@ -483,7 +565,7 @@ function getExtras(venueId, year) {
   return v.extras[usedYear] || [];
 }
 
-function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantities = {} }) {
+function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantities, extraOptions = {}, extraVariants = {} }) {
   if (!venue || !date || guests < 1) return null;
   const d = new Date(date + 'T12:00:00');
   const year = d.getFullYear(), month = d.getMonth() + 1, dow = d.getDay();
@@ -499,24 +581,77 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
 
   const allExtras = getExtras(venue, year);
   const quantities = extraQuantities || {};
+  const options = extraOptions || {};
   const extrasLines = allExtras.map(e => {
     const condMandatory = e.mandatoryWhen ? e.mandatoryWhen(dow, month) : false;
     const isMandatory = !e.optional || condMandatory;
-    const quantity = e.quantityBased ? Math.max(0, Math.round(Number(quantities[e.id] || 0))) : null;
-    const included = e.quantityBased
-      ? true
-      : (isMandatory || selectedExtras[e.id] === true);
-    const computedPrice = e.quantityBased
-      ? quantity * (e.price || 0)
-      : (e.pricePerPerson
-        ? Math.max(guests * e.pricePerPerson, e.minPrice || 0)
-        : (e.price || 0));
-    const priceDetail = e.quantityBased
-      ? `${quantity} ${quantity === 1 ? 'pack' : 'packs'} × ${eur(e.price)}`
-      : (e.pricePerPerson
-        ? `${guests} pers. × ${eur(e.pricePerPerson)} (mínim ${eur(e.minPrice)})`
-        : null);
-    return { ...e, isMandatory, condMandatory, included, computedPrice, priceDetail };
+    const quantity = e.quantityBased
+      ? Math.max(0, Math.round(Number(extraQuantities[e.id] || 0)))
+      : null;
+    const minQuantity = e.quantityBased ? (e.minQuantity ?? 0) : 0;
+    const included = isMandatory || selectedExtras[e.id] === true || e.id === 'barlliure' || (e.quantityBased && quantity > 0);
+    const hasQuantity = e.quantityBased ? quantity >= minQuantity : true;
+
+    let computedPrice = 0;
+    let priceDetail = null;
+
+    let currentPrice = e.price || 0;
+    let variantSuffix = "";
+    const extraOpts = options[e.id] || {};
+
+    if (e.variants && extraVariants && extraVariants[e.id]) {
+        const selectedVariant = e.variants.find(v => v.id === extraVariants[e.id]);
+        if (selectedVariant) {
+            currentPrice = selectedVariant.price;
+            variantSuffix = ` (${selectedVariant.label})`;
+        }
+    }
+    
+    if (e.id === 'barlliure') {
+      const extraHours = Math.min(3, Math.max(0, Number(extraOpts.hours ?? 0)));
+      const hours = 2 + extraHours;
+      const timing = 'advance';
+      const premium = extraOpts.premium === true;
+      const adults = Math.max(0, Number(extraOpts.adults ?? guests) || 0);
+      const rate = year >= 2027 ? 9.5 : 9.1;
+      const halfRate = year >= 2027 ? 5.5 : 5.2;
+      const minRate = year >= 2027
+        ? (adults <= 60 ? 630 : 0)
+        : (adults <= 60 ? 550 : 0);
+      const minHalfRate = year >= 2027
+        ? (adults <= 60 ? 420 : 0)
+        : (adults <= 60 ? 360 : 0);
+      const premiumSurcharge = premium ? adults * extraHours * 2.5 : 0;
+      const fullHours = Math.floor(extraHours);
+      const halfHours = extraHours - fullHours >= 0.5 ? 1 : 0;
+      const basePrice = (fullHours * rate + halfHours * halfRate) * adults;
+      const minBase = fullHours > 0 ? minRate * fullHours : 0;
+      const minHalf = halfHours > 0 ? minHalfRate : 0;
+      const effectiveBase = Math.max(basePrice, minBase + minHalf);
+      computedPrice = effectiveBase + premiumSurcharge;
+      priceDetail = `2h incloses + ${extraHours}h extra × ${adults} adults${premium ? ' + premium' : ''}`;
+    } else if (e.id === 'cookiebar') {
+      computedPrice = currentPrice + (quantity * (e.extraPackPrice || 0));
+      priceDetail = quantity > 0
+        ? `${eur(currentPrice)} base + ${quantity} extres extra × ${eur(e.extraPackPrice || 0)}`
+        : `${eur(currentPrice)} base`;
+    } else if (e.quantityBased) {
+      computedPrice = quantity * currentPrice;
+      // Actualitzem el detall amb el nom de la variant si existeix
+      priceDetail = `${quantity} ${e.unit === 'unit' ? 'unit.' : 'pack/s'}${variantSuffix} × ${eur(currentPrice)}`;
+    } else if (e.pricingFn) {
+      computedPrice = e.pricingFn(guests) || 0;
+      priceDetail = e.pricingFnDetail ? e.pricingFnDetail(guests) : null;
+    } 
+    else if (e.pricePerPerson) {
+      computedPrice = Math.max(guests * e.pricePerPerson, e.minPrice || 0);
+      priceDetail = `${guests} pers. × ${eur(e.pricePerPerson)} (mínim ${eur(e.minPrice)})`;
+    } 
+    else {
+      computedPrice = currentPrice;
+    }
+    
+  return { ...e, isMandatory, condMandatory, included: included && hasQuantity, computedPrice, priceDetail };
   }).filter(e => e.included);
 
   const extrasTotal = extrasLines.reduce((s, e) => s + e.computedPrice, 0);
@@ -533,7 +668,8 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
   };
 }
 
-function getExtraLabel(extraId, lang) {
+function getExtraLabel(extraId, variantIdOrLang, maybeLang) {
+  const lang = maybeLang ?? variantIdOrLang;
   const idToKey = {
     'ressopo': 'supper',
     'staffmenu': 'staffmenu',
@@ -544,6 +680,11 @@ function getExtraLabel(extraId, lang) {
     'banquetexterior': 'banquetexterior',
     'accommodation': 'accommodation',
     'gardenaperitif': 'gardenaperitif',
+    'espatllaibericacebo': 'espatllaibericacebo',
+    'espatllaibericagla': 'espatllaibericagla',
+    'pernilibericcebo': 'pernilibericcebo',
+    'pernilibericgla': 'pernilibericgla',
+    'pernil': 'pernil',
   };
   const key = idToKey[extraId];
   return key ? T[lang]?.[key] : null;
