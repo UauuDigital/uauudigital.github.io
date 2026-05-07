@@ -589,7 +589,7 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
       ? Math.max(0, Math.round(Number(extraQuantities[e.id] || 0)))
       : null;
     const minQuantity = e.quantityBased ? (e.minQuantity ?? 0) : 0;
-    const included = isMandatory || selectedExtras[e.id] === true || e.id === 'barlliure';
+    const included = isMandatory || selectedExtras[e.id] === true || e.id === 'barlliure' || (e.quantityBased && quantity > 0);
     const hasQuantity = e.quantityBased ? quantity >= minQuantity : true;
 
     let computedPrice = 0;
