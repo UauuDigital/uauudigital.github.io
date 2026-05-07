@@ -36,7 +36,15 @@ function setVariant(id, variantId) {
   React.useEffect(() => { localStorage.setItem('uauu-lang', lang); }, [lang]);
 
   function set(key, val) { setForm(f => ({ ...f, [key]: val })); }
-  function setExtra(id, val) { setForm(f => ({ ...f, selectedExtras: { ...f.selectedExtras, [id]: val } })); }
+  function setExtra(id, val) {
+    setForm(f => ({
+      ...f,
+      selectedExtras: { ...f.selectedExtras, [id]: val },
+      extraQuantities: val || id !== 'cookiebar'
+        ? f.extraQuantities
+        : { ...f.extraQuantities, [id]: 0 }
+    }));
+  }
   function setQuantity(id, val) { setForm(f => ({ ...f, extraQuantities: { ...f.extraQuantities, [id]: val } })); }
 
   const dateYear = form.date ? new Date(form.date + 'T12:00:00').getFullYear() : null;

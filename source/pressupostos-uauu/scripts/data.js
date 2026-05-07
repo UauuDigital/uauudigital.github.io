@@ -76,6 +76,7 @@ const QUANTITY_EXTRAS = {
       }
     },
     { id: 'candybar',     label: 'Candy bar',      price: 420,                                      optional: true },
+    { id: 'cookiebar',    label: 'Cookie bar',     price: 320, extraPackPrice: 50, unit: 'pack', quantityBased: true, optional: true },
 
   ],
   2027: [
@@ -575,9 +576,12 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
   const extrasLines = allExtras.map(e => {
     const condMandatory = e.mandatoryWhen ? e.mandatoryWhen(dow, month) : false;
     const isMandatory = !e.optional || condMandatory;
-    const quantity = e.quantityBased ? Math.max(0, Math.round(Number(extraQuantities[e.id] || 0))) : null;    
+    const quantity = e.quantityBased
+      ? Math.max(0, Math.round(Number(extraQuantities[e.id] || 0)))
+      : null;
+    const minQuantity = e.quantityBased ? (e.minQuantity ?? 0) : 0;
     const included = isMandatory || selectedExtras[e.id] === true;
-    const hasQuantity = e.quantityBased ? quantity > 0 : true;
+    const hasQuantity = e.quantityBased ? quantity >= minQuantity : true;
 
     let computedPrice = 0;
     let priceDetail = null;
@@ -593,7 +597,12 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
         }
     }
     
-    if (e.quantityBased) {
+    if (e.id === 'cookiebar') {
+      computedPrice = currentPrice + (quantity * (e.extraPackPrice || 0));
+      priceDetail = quantity > 0
+        ? `${eur(currentPrice)} base + ${quantity} extres extra × ${eur(e.extraPackPrice || 0)}`
+        : `${eur(currentPrice)} base`;
+    } else if (e.quantityBased) {
       computedPrice = quantity * currentPrice;
       // Actualitzem el detall amb el nom de la variant si existeix
       priceDetail = `${quantity} ${e.unit === 'unit' ? 'unit.' : 'pack/s'}${variantSuffix} × ${eur(currentPrice)}`;

@@ -1,15 +1,15 @@
-function ExtrasSection({ 
-  venueId, 
-  year, 
-  date, 
-  guests, 
-  selectedExtras, 
-  extraQuantities, 
-  extraVariants,      // 1. Afegim extraVariants
-  onChange, 
-  onQuantityChange, 
-  onVariantChange,    // 2. Afegim onVariantChange
-  lang 
+function ExtrasSection({
+  venueId,
+  year,
+  date,
+  guests,
+  selectedExtras,
+  extraQuantities,
+  extraVariants,
+  onChange,
+  onQuantityChange,
+  onVariantChange,
+  lang
 }) {
   if (!venueId || !year) return null;
   const extras = getExtras(venueId, year).filter(e => !['menu-staff', 'menu-infantil'].includes(e.id));
@@ -26,8 +26,8 @@ function ExtrasSection({
         const condMandatory = e.mandatoryWhen && dow !== null ? e.mandatoryWhen(dow, month) : false;
         const isMandatory = !e.optional || condMandatory;
         const quantity = e.quantityBased ? (extraQuantities?.[e.id] ?? 0) : null;
-        
-        // 3. Lògica per determinar el preu a mostrar segons la variant seleccionada
+        const isCookieBar = e.id === 'cookiebar';
+
         let currentPrice = e.price || 0;
         if (e.variants && extraVariants?.[e.id]) {
           const variant = e.variants.find(v => v.id === extraVariants[e.id]);
@@ -36,12 +36,14 @@ function ExtrasSection({
           currentPrice = e.pricingFn(guests) || 0;
         }
 
-        const priceLabel = e.quantityBased
-          ? `${eur(currentPrice)}/${e.unit === 'unit' ? 'unit.' : 'pack'} + IVA`
-          : e.pricePerPerson
-            ? `${eur(e.pricePerPerson)}/pers. (mínim ${eur(e.minPrice)}) + IVA`
-            : `${eur(currentPrice)} + IVA`;
-            
+        const priceLabel = isCookieBar
+          ? `${eur(currentPrice)} base + ${eur(e.extraPackPrice || 0)}/extra + IVA`
+          : e.quantityBased
+            ? `${eur(currentPrice)}/${e.unit === 'unit' ? 'unit.' : 'pack'} + IVA`
+            : e.pricePerPerson
+              ? `${eur(e.pricePerPerson)}/pers. (mínim ${eur(e.minPrice)}) + IVA`
+              : `${eur(currentPrice)} + IVA`;
+
         const mandatoryLabel = condMandatory ? 'Obligatori (data sel.)' : 'Obligatori';
 
         return (
@@ -51,10 +53,9 @@ function ExtrasSection({
                 {getExtraLabel(e.id, lang) || e.label}
                 {isMandatory && <span className="extra-badge badge-mandatory">{mandatoryLabel}</span>}
               </div>
-              
-              {/* 4. Selector de Variants (només si l'extra en té i està actiu/quantitat > 0) */}
+
               {e.variants && (e.quantityBased ? quantity > 0 : selectedExtras[e.id]) && (
-                <select 
+                <select
                   className="variant-select"
                   value={extraVariants?.[e.id] || e.variants[0].id}
                   onChange={(ev) => onVariantChange(e.id, ev.target.value)}
@@ -70,8 +71,29 @@ function ExtrasSection({
 
               <div className="extra-price">{priceLabel}</div>
             </div>
-            
-            {e.quantityBased ? (
+
+            {isCookieBar ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                <div className="extra-toggle">
+                  <button className={`toggle-btn ${selectedExtras[e.id] ? 'active' : ''}`} onClick={() => onChange(e.id, true)}>Sí</button>
+                  <button className={`toggle-btn ${!selectedExtras[e.id] ? 'active' : ''}`} onClick={() => onChange(e.id, false)}>No</button>
+                </div>
+                {selectedExtras[e.id] && (
+                  <div className="extra-quantity" style={{ marginLeft: 0 }}>
+                    <input
+                      className="extra-quantity-input"
+                      type="number"
+                      min={0}
+                      step={1}
+                      value={quantity}
+                      onChange={ev => onQuantityChange(e.id, normalizeQuantity(ev.target.value))}
+                      aria-label={`${e.label} extres`}
+                    />
+                    <span className="extra-quantity-unit">extres</span>
+                  </div>
+                )}
+              </div>
+            ) : e.quantityBased ? (
               <div className="extra-quantity">
                 <input
                   className="extra-quantity-input"
