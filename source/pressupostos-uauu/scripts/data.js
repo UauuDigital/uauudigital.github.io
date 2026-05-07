@@ -54,7 +54,7 @@ const QUANTITY_EXTRAS = {
        return `750€ + ${guests - 80}pers. × 4€`;  
       }
     },
-    { id: 'pernil',        label: 'Pernil amb pa amb tomàquet',                    unit: 'unit',                         optional: true,
+    { id: 'pernil',       label: 'Pernil amb pa amb tomàquet', unit: 'unit',                        optional: true,
       variants: [
         { id: 'res',                  labelKey: ' ',                          price: 0    },
         { id: 'espatllaibericacebo',  labelKey: 'Espatlla ibèrica de cebo',   price: 580  },
@@ -63,7 +63,7 @@ const QUANTITY_EXTRAS = {
         { id: 'pernilibericgla',      labelKey: 'Pernil ibèric de gla 5J',    price: 1150 }
       ]
     },
-    { id: 'baobar',        label: 'Bao bar',          price: 590,                                      optional: true,
+    { id: 'baobar',       label: 'Bao bar',        price: 590,                                      optional: true,
       pricingFn: guests => {
         if (guests < 35) return 0;
         if (guests <= 80) return 590;
@@ -75,12 +75,14 @@ const QUANTITY_EXTRAS = {
        return `590€ + ${guests - 80}pers. × 2.5€`;  
       }
     },
+    { id: 'candybar',     label: 'Candy bar',      price: 420,                                      optional: true },
+
   ],
   2027: [
     { id: 'ressopo',      label: 'Ressopó',        price: 275, unit: 'pack',   quantityBased: true, optional: true },
     { id: 'staffmenu',    label: 'Menú Staff',     price: 85,  unit: 'person', quantityBased: true, optional: true },
     { id: 'childrenmenu', label: 'Menú infantil',  price: 68,  unit: 'person', quantityBased: true, optional: true },
-    { id: 'sushi',        label: 'Sushi',                 price: 750,                               optional: true,
+    { id: 'sushi',        label: 'Sushi',          price: 750,                                      optional: true,
       pricingFn: guests => {
         if (guests < 35) return 0;
         if (guests <= 80) return 750;
@@ -92,7 +94,7 @@ const QUANTITY_EXTRAS = {
        return `750€ + ${guests - 80}pers. × 4€`;  
       }
     },
-    { id: 'pernil',        label: 'Pernil amb pa amb tomàquet',                    unit: 'unit',                         optional: true,
+    { id: 'pernil',       label: 'Pernil amb pa amb tomàquet', unit: 'unit',                        optional: true,
       variants: [
         { id: 'res',                  labelKey: ' ',                          price: 0    },
         { id: 'espatllaibericacebo',  labelKey: 'Espatlla ibèrica de cebo',   price: 620  },
@@ -101,6 +103,7 @@ const QUANTITY_EXTRAS = {
         { id: 'pernilibericgla',      labelKey: 'Pernil ibèric de gla 5J',    price: 1195 }
       ]
     },
+    { id: 'candybar',     label: 'Candy bar',      price: 420,                                      optional: true },
   ],
 };
 
