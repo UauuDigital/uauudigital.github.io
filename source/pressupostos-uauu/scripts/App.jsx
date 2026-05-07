@@ -19,7 +19,7 @@ function App() {
     guests: 80, 
     selectedExtras: {}, 
     extraQuantities: {}, 
-    extraVariants: { pernil: 'recebo' }, // Estil per defecte
+    extraVariants: { pernil: 'res' }, // Estil per defecte
     coupleName: '', 
     notes: '' 
   };

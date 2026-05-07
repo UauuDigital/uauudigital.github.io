@@ -32,6 +32,8 @@ function ExtrasSection({
         if (e.variants && extraVariants?.[e.id]) {
           const variant = e.variants.find(v => v.id === extraVariants[e.id]);
           if (variant) currentPrice = variant.price;
+        } else if (e.pricingFn) {
+          currentPrice = e.pricingFn(guests) || 0;
         }
 
         const priceLabel = e.quantityBased
@@ -59,7 +61,9 @@ function ExtrasSection({
                   style={{ marginTop: '8px', display: 'block' }}
                 >
                   {e.variants.map(v => (
-                    <option key={v.id} value={v.id}>{v.label} ({eur(v.price)})</option>
+                    <option key={v.id} value={v.id}>
+                      {getExtraLabel(v.id, lang) || v.label || v.labelKey || v.id} ({eur(v.price)})
+                    </option>
                   ))}
                 </select>
               )}
