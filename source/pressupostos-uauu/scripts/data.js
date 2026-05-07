@@ -77,6 +77,9 @@ const QUANTITY_EXTRAS = {
     },
     { id: 'candybar',     label: 'Candy bar',      price: 420,                                      optional: true },
     { id: 'cookiebar',    label: 'Cookie bar',     price: 320, extraPackPrice: 50, unit: 'pack', quantityBased: true, optional: true },
+    { id: 'barlliure',    label: 'Barra lliure',   optional: true,
+      pricingFn: guests => 0,
+    },
 
   ],
   2027: [
@@ -106,6 +109,9 @@ const QUANTITY_EXTRAS = {
     },
     { id: 'candybar',     label: 'Candy bar',      price: 420,                                      optional: true },
     { id: 'cookiebar',    label: 'Cookie bar',     price: 320, extraPackPrice: 50, unit: 'pack', quantityBased: true, optional: true },
+    { id: 'barlliure',    label: 'Barra lliure',   optional: true,
+      pricingFn: guests => 0,
+    },
 
   ],
 };
@@ -559,7 +565,7 @@ function getExtras(venueId, year) {
   return v.extras[usedYear] || [];
 }
 
-function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantities, extraVariants = {} }) {
+function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantities, extraOptions = {}, extraVariants = {} }) {
   if (!venue || !date || guests < 1) return null;
   const d = new Date(date + 'T12:00:00');
   const year = d.getFullYear(), month = d.getMonth() + 1, dow = d.getDay();
@@ -575,6 +581,7 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
 
   const allExtras = getExtras(venue, year);
   const quantities = extraQuantities || {};
+  const options = extraOptions || {};
   const extrasLines = allExtras.map(e => {
     const condMandatory = e.mandatoryWhen ? e.mandatoryWhen(dow, month) : false;
     const isMandatory = !e.optional || condMandatory;
@@ -582,7 +589,7 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
       ? Math.max(0, Math.round(Number(extraQuantities[e.id] || 0)))
       : null;
     const minQuantity = e.quantityBased ? (e.minQuantity ?? 0) : 0;
-    const included = isMandatory || selectedExtras[e.id] === true;
+    const included = isMandatory || selectedExtras[e.id] === true || e.id === 'barlliure';
     const hasQuantity = e.quantityBased ? quantity >= minQuantity : true;
 
     let computedPrice = 0;
@@ -590,6 +597,7 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
 
     let currentPrice = e.price || 0;
     let variantSuffix = "";
+    const extraOpts = options[e.id] || {};
 
     if (e.variants && extraVariants && extraVariants[e.id]) {
         const selectedVariant = e.variants.find(v => v.id === extraVariants[e.id]);
@@ -599,7 +607,30 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
         }
     }
     
-    if (e.id === 'cookiebar') {
+    if (e.id === 'barlliure') {
+      const extraHours = Math.min(3, Math.max(0, Number(extraOpts.hours ?? 0)));
+      const hours = 2 + extraHours;
+      const timing = 'advance';
+      const premium = extraOpts.premium === true;
+      const adults = Math.max(0, Number(extraOpts.adults ?? guests) || 0);
+      const rate = year >= 2027 ? 9.5 : 9.1;
+      const halfRate = year >= 2027 ? 5.5 : 5.2;
+      const minRate = year >= 2027
+        ? (adults <= 60 ? 630 : 0)
+        : (adults <= 60 ? 550 : 0);
+      const minHalfRate = year >= 2027
+        ? (adults <= 60 ? 420 : 0)
+        : (adults <= 60 ? 360 : 0);
+      const premiumSurcharge = premium ? adults * extraHours * 2.5 : 0;
+      const fullHours = Math.floor(extraHours);
+      const halfHours = extraHours - fullHours >= 0.5 ? 1 : 0;
+      const basePrice = (fullHours * rate + halfHours * halfRate) * adults;
+      const minBase = fullHours > 0 ? minRate * fullHours : 0;
+      const minHalf = halfHours > 0 ? minHalfRate : 0;
+      const effectiveBase = Math.max(basePrice, minBase + minHalf);
+      computedPrice = effectiveBase + premiumSurcharge;
+      priceDetail = `2h incloses + ${extraHours}h extra × ${adults} adults${premium ? ' + premium' : ''}`;
+    } else if (e.id === 'cookiebar') {
       computedPrice = currentPrice + (quantity * (e.extraPackPrice || 0));
       priceDetail = quantity > 0
         ? `${eur(currentPrice)} base + ${quantity} extres extra × ${eur(e.extraPackPrice || 0)}`

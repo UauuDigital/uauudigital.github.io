@@ -19,6 +19,7 @@ function App() {
     guests: 80, 
     selectedExtras: {}, 
     extraQuantities: {}, 
+    extraOptions: {},
     extraVariants: { pernil: 'res' }, // Estil per defecte
     coupleName: '', 
     notes: '' 
@@ -46,6 +47,15 @@ function setVariant(id, variantId) {
     }));
   }
   function setQuantity(id, val) { setForm(f => ({ ...f, extraQuantities: { ...f.extraQuantities, [id]: val } })); }
+  function setExtraOption(id, key, value) {
+    setForm(f => ({
+      ...f,
+      extraOptions: {
+        ...f.extraOptions,
+        [id]: { ...(f.extraOptions?.[id] || {}), [key]: value }
+      }
+    }));
+  }
 
   const dateYear = form.date ? new Date(form.date + 'T12:00:00').getFullYear() : null;
   const menuStaffExtra = getQuantityExtra(form.venue, dateYear, 'menu-staff');
@@ -161,9 +171,11 @@ function setVariant(id, variantId) {
             guests={form.guests}
             selectedExtras={form.selectedExtras}
             extraQuantities={form.extraQuantities}
+            extraOptions={form.extraOptions}
             extraVariants={form.extraVariants}
             onChange={setExtra}
             onQuantityChange={setQuantity}
+            onOptionChange={setExtraOption}
             onVariantChange={setVariant}
             lang={lang}
           />
