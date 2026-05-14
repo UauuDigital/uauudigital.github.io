@@ -13,6 +13,7 @@
 const MONTHS_CA = ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
 const DAYS_CA   = ['Diumenge','Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte'];
 const DAYS_SHORT = ['Dg','Dl','Dm','Dc','Dj','Dv','Ds'];
+const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTQJRPzbjDctU5oo8z1Q-ssJvgMiiCcFFICdBvlti5pYhUJW38GqDnNTMuzZMsN7pInxal1kBhNcLh3/pub?output=xlsx';
 
 // ────────────────────────────────────────────────────────────────
 // 2. UTILITY FUNCTIONS
@@ -20,6 +21,55 @@ const DAYS_SHORT = ['Dg','Dl','Dm','Dc','Dj','Dv','Ds'];
 
 function eur(n) {
   return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
+}
+
+function normText(value) {
+  return String(value ?? '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
+}
+
+function parseMoney(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const normalized = String(value).replace(/\s/g, '').replace(',', '.').replace(/[^\d.-]/g, '');
+  const num = Number(normalized);
+  return Number.isFinite(num) ? num : null;
+}
+
+function parseBool(value, defaultValue = false) {
+  if (value === null || value === undefined || value === '') return defaultValue;
+  const txt = normText(value);
+  if (['1', 'true', 'yes', 'si', 's', 'y', 'sí', 'oui', 'x', 'checked', 'on', 'verdadero', 'v'].includes(txt)) return true;
+  if (['0', 'false', 'no', 'n', 'falso', 'f'].includes(txt)) return false;
+  return defaultValue;
+}
+
+function parseYearCell(value) {
+  const year = Number(String(value ?? '').trim());
+  return Number.isInteger(year) ? year : null;
+}
+
+function parseVenueIds(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return [];
+  if (raw === '*' || raw.toLowerCase() === 'totes' || raw.toLowerCase() === 'all') {
+    return VENUES.map(v => v.id);
+  }
+  const normalized = normText(raw);
+  return VENUES
+    .filter(v => normalized.includes(normText(v.name)) || normalized.includes(normText(v.id)))
+    .map(v => v.id);
+}
+
+function parseUnitStyle(value) {
+  const txt = normText(value);
+  if (txt.includes('person') || txt.includes('pers')) return 'person';
+  if (txt.includes('pack')) return 'pack';
+  if (txt.includes('unit')) return 'unit';
+  return 'unit';
+}
+
+function buildServiceId(label, fallbackIndex) {
+  const base = normText(label).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return base || `service-${fallbackIndex}`;
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -34,87 +84,103 @@ const VENUES = [
 ];
 
 // ────────────────────────────────────────────────────────────────
-// 4. QUANTITY-BASED EXTRAS (used in pricing config)
+// 4. SPREADSHEET-DRIVEN EXTRAS
 // ────────────────────────────────────────────────────────────────
 
-const QUANTITY_EXTRAS = {
-  2026: [
-    { id: 'ressopo',      label: 'Ressopó',        price: 265, unit: 'pack',   quantityBased: true, optional: true },
-    { id: 'staffmenu',    label: 'Menú Staff',     price: 85,  unit: 'person', quantityBased: true, optional: true },
-    { id: 'childrenmenu', label: 'Menú infantil',  price: 65,  unit: 'person', quantityBased: true, optional: true },
-    { id: 'sushi',        label: 'Sushi',          price: 750,                                      optional: true,
-      pricingFn: guests => {
-        if (guests < 35) return 0;
-        if (guests <= 80) return 750;
-        return 750 + (guests - 80) * 4;
-      },
-      pricingFnDetail: guests => {
-       if (guests < 35) return null;
-       if (guests <= 80) return '750€';
-       return `750€ + ${guests - 80}pers. × 4€`;  
-      }
-    },
-    { id: 'pernil',       label: 'Pernil amb pa amb tomàquet', unit: 'unit',                        optional: true,
-      variants: [
-        { id: 'res',                  labelKey: ' ',                          price: 0    },
-        { id: 'espatllaibericacebo',  labelKey: 'Espatlla ibèrica de cebo',   price: 580  },
-        { id: 'espatllaibericagla',   labelKey: 'Espatlla ibèrica de gla 5J', price: 690  },
-        { id: 'pernilibericcebo',     labelKey: 'Pernil ibèric de cebo:',     price: 765  },
-        { id: 'pernilibericgla',      labelKey: 'Pernil ibèric de gla 5J',    price: 1150 }
-      ]
-    },
-    { id: 'baobar',       label: 'Bao bar',        price: 590,                                      optional: true,
-      pricingFn: guests => {
-        if (guests < 35) return 0;
-        if (guests <= 80) return 590;
-        return 590 + (guests - 80) * 2.5;
-      },
-      pricingFnDetail: guests => {
-       if (guests < 35) return null;
-       if (guests <= 80) return '590';
-       return `590€ + ${guests - 80}pers. × 2.5€`;  
-      }
-    },
-    { id: 'candybar',     label: 'Candy bar',      price: 420,                                      optional: true },
-    { id: 'cookiebar',    label: 'Cookie bar',     price: 320, extraPackPrice: 50, unit: 'pack', quantityBased: true, optional: true },
-    { id: 'barlliure',    label: 'Barra lliure',   optional: true,
-      pricingFn: guests => 0,
-    },
-
-  ],
-  2027: [
-    { id: 'ressopo',      label: 'Ressopó',        price: 275, unit: 'pack',   quantityBased: true, optional: true },
-    { id: 'staffmenu',    label: 'Menú Staff',     price: 85,  unit: 'person', quantityBased: true, optional: true },
-    { id: 'childrenmenu', label: 'Menú infantil',  price: 68,  unit: 'person', quantityBased: true, optional: true },
-    { id: 'sushi',        label: 'Sushi',          price: 750,                                      optional: true,
-      pricingFn: guests => {
-        if (guests < 35) return 0;
-        if (guests <= 80) return 750;
-        return 750 + (guests - 80) * 4;
-      },
-      pricingFnDetail: guests => {
-       if (guests < 35) return null;
-       if (guests <= 80) return '750€';
-       return `750€ + ${guests - 80}pers. × 4€`;  
-      }
-    },
-    { id: 'pernil',       label: 'Pernil amb pa amb tomàquet', unit: 'unit',                        optional: true,
-      variants: [
-        { id: 'res',                  labelKey: ' ',                          price: 0    },
-        { id: 'espatllaibericacebo',  labelKey: 'Espatlla ibèrica de cebo',   price: 620  },
-        { id: 'espatllaibericagla',   labelKey: 'Espatlla ibèrica de gla 5J', price: 730  },
-        { id: 'pernilibericcebo',     labelKey: 'Pernil ibèric de cebo:',     price: 790  },
-        { id: 'pernilibericgla',      labelKey: 'Pernil ibèric de gla 5J',    price: 1195 }
-      ]
-    },
-    { id: 'candybar',     label: 'Candy bar',      price: 420,                                      optional: true },
-    { id: 'cookiebar',    label: 'Cookie bar',     price: 320, extraPackPrice: 50, unit: 'pack', quantityBased: true, optional: true },
-    { id: 'barlliure',    label: 'Barra lliure',   optional: true,
-      pricingFn: guests => 0,
-    },
-
-  ],
+const SPREADSHEET_COLUMNS = {
+  name: ['nom servei', 'servei', 'nom'],
+  venue: ['masia', 'finca', 'venue'],
+  year: ['any', 'curs'],
+  price: ['preu', 'import'],
+  unit: ['estil d\'unitat', 'unitat', 'unit style'],
+  quantity: ['quantityBased'],
+  optional: ['si es opcional', 'opcional', 'optional'],
 };
+
+function pickColumn(row, keys) {
+  for (const key of Object.keys(row)) {
+    const normalizedKey = normText(key);
+    if (keys.some(alias => normalizedKey === normText(alias) || normalizedKey.includes(normText(alias)) || normText(alias).includes(normalizedKey))) {
+      return row[key];
+    }
+  }
+  return undefined;
+}
+
+function pickColumnLoose(row, patterns) {
+  for (const key of Object.keys(row)) {
+    const normalizedKey = normText(key);
+    if (patterns.every(p => normalizedKey.includes(normText(p)))) {
+      return row[key];
+    }
+  }
+  return undefined;
+}
+
+function buildExtrasByVenue(rows) {
+  const extrasByVenue = {};
+  for (const venue of VENUES) extrasByVenue[venue.id] = {};
+  const seen = new Set();
+
+  rows.forEach((row, index) => {
+    const label = pickColumn(row, SPREADSHEET_COLUMNS.name);
+    const venueCell = pickColumn(row, SPREADSHEET_COLUMNS.venue);
+    const yearCell = pickColumn(row, SPREADSHEET_COLUMNS.year);
+    const priceCell = pickColumn(row, SPREADSHEET_COLUMNS.price);
+    const unitCell = pickColumn(row, SPREADSHEET_COLUMNS.unit);
+    const quantityCell = pickColumn(row, SPREADSHEET_COLUMNS.quantity) ?? pickColumnLoose(row, ['quantity', 'based']);
+    const optionalCell = pickColumn(row, SPREADSHEET_COLUMNS.optional);
+
+    if (!label || !venueCell || !yearCell) return;
+    const venueIds = parseVenueIds(venueCell);
+    const year = parseYearCell(yearCell);
+    const price = parseMoney(priceCell);
+    if (!venueIds.length || !year) return;
+
+    const id = buildServiceId(label, index);
+    const quantityBased = parseBool(quantityCell, false) || ['quantity', 'quantitat', 'quantitat?', 'q', 'qty', 'quantitybased', 'yes', 'true', 'verdadero', 'vrai', 'si', 'sí'].includes(normText(quantityCell));
+    const optional = parseBool(optionalCell, true);
+    const unit = parseUnitStyle(unitCell);
+    const signature = `${id}|${year}|${venueIds.slice().sort().join(',')}|${quantityBased ? 1 : 0}|${optional ? 1 : 0}|${unit}|${price ?? ''}`;
+    if (seen.has(signature)) return;
+    seen.add(signature);
+
+    const extra = {
+      id,
+      label: String(label).trim(),
+      optional,
+      year,
+    };
+
+    if (price !== null) extra.price = price;
+    if (quantityBased) {
+      extra.quantityBased = true;
+      extra.unit = unit;
+    } else if (unitCell) {
+      extra.unit = unit;
+    }
+
+    for (const venueId of venueIds) {
+      if (!extrasByVenue[venueId][year]) extrasByVenue[venueId][year] = [];
+      extrasByVenue[venueId][year].push(extra);
+    }
+  });
+
+  return extrasByVenue;
+}
+
+async function loadExtrasFromSpreadsheet() {
+  if (typeof window === 'undefined' || typeof fetch !== 'function') return {};
+  const response = await fetch(SPREADSHEET_URL, { cache: 'no-store' });
+  if (!response.ok) throw new Error(`Spreadsheet fetch failed: ${response.status}`);
+  const buffer = await response.arrayBuffer();
+  const workbook = XLSX.read(buffer, { type: 'array' });
+  const firstSheetName = workbook.SheetNames[0];
+  if (!firstSheetName) return {};
+  const sheet = workbook.Sheets[firstSheetName];
+  const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+  return buildExtrasByVenue(rows);
+}
 
 // ────────────────────────────────────────────────────────────────
 // 5. PRICE CONFIGURATION & VENUE-SPECIFIC PRICING
@@ -179,19 +245,8 @@ const PRICE_CONFIG = {
         },
       },
       extras: {
-        2026: [
-          { id: 'ceremony',     label: 'Cerimònia',     price: 1190, optional: true  },
-          { id: 'dj',           label: 'DJ',             price: 1195, optional: false },
-          { id: 'bridalsuite', label: 'Suite Nupcial',  price: 290,  optional: true  },
-          ...QUANTITY_EXTRAS[2026],
-        ],
-        2027: [
-          { id: 'ceremony',           label: 'Cerimònia',                price: 1740, optional: true  },
-          { id: 'bridalsuite',       label: 'Suite Nupcial',            price: 295,  optional: true  },
-          { id: 'essential-services', label: 'Quota serveis essencials', price: 890,  optional: false },
-          { id: 'dj',                 label: 'DJ',                       price: 1250, optional: false },
-          ...QUANTITY_EXTRAS[2027],
-        ],
+        2026: [],
+        2027: [],
       },
     },
 
@@ -241,19 +296,8 @@ const PRICE_CONFIG = {
         },
       },
       extras: {
-        2026: [
-          { id: 'ceremony',          label: 'Cerimònia',          price: 1690, optional: true  },
-          { id: 'dj',                label: 'DJ',                  price: 1195, optional: false },
-          { id: 'banquetexterior',  label: 'Banquet a l\'exterior', price: 2500, optional: true  },
-          ...QUANTITY_EXTRAS[2026],
-        ],
-        2027: [
-          { id: 'ceremony',          label: 'Cerimònia',                price: 1740, optional: true  },
-          { id: 'essential-services',label: 'Quota serveis essencials', price: 1490, optional: false },
-          { id: 'dj',                label: 'DJ',                       price: 1250, optional: false },
-          { id: 'banquetexterior',  label: 'Banquet a l\'exterior',    price: 2500, optional: true  },
-          ...QUANTITY_EXTRAS[2027],
-        ],
+        2026: [],
+        2027: [],
       },
     },
 
@@ -299,25 +343,8 @@ const PRICE_CONFIG = {
         },
       },
       extras: {
-        2026: [
-          { id: 'ceremony',         label: 'Cerimònia',          price: 1190, optional: true  },
-          { id: 'dj',               label: 'DJ',                  price: 1195, optional: false },
-          // Allotjament: obligatori els dissabtes de Maig–Octubre, opcional la resta
-          { id: 'accommodation',    label: 'Allotjament',         price: 1190, optional: true,
-            mandatoryWhen: (dow, month) => dow === 6 && [5,6,7,8,9,10].includes(month) },
-          // Banquet exterior: 10€/persona, mínim 1500€
-          { id: 'banquetexterior', label: "Banquet a l'exterior", pricePerPerson: 10, minPrice: 1500, optional: true },
-          ...QUANTITY_EXTRAS[2026],
-        ],
-        2027: [
-          { id: 'ceremony',           label: 'Cerimònia',                price: 1740, optional: true  },
-          { id: 'essential-services', label: 'Quota serveis essencials', price: 890,  optional: false },
-          { id: 'dj',                 label: 'DJ',                       price: 1250, optional: false },
-          { id: 'accommodation',      label: 'Allotjament',              price: 1290, optional: true,
-            mandatoryWhen: (dow, month) => dow === 6 && [5,6,7,8,9,10].includes(month) },
-          { id: 'banquetexterior',   label: "Banquet a l'exterior",     pricePerPerson: 10, minPrice: 1500, optional: true },
-          ...QUANTITY_EXTRAS[2027],
-        ],
+        2026: [],
+        2027: [],
       },
     },
 
@@ -363,23 +390,8 @@ const PRICE_CONFIG = {
         },
       },
       extras: {
-        2026: [
-          { id: 'ceremony',      label: 'Cerimònia',         price: 1690, optional: true  },
-          { id: 'dj',            label: 'DJ',                 price: 1195, optional: false },
-          { id: 'accommodation', label: 'Allotjament',        price: 1290, optional: true,
-            mandatoryWhen: (dow, month) => dow === 6 && [5,6,7,8,9,10].includes(month) },
-          { id: 'gardenaperitif', label: "Aperitiu al jardí", pricePerPerson: 10, minPrice: 1000, optional: true },
-          ...QUANTITY_EXTRAS[2026],
-        ],
-        2027: [
-          { id: 'ceremony',           label: 'Cerimònia',                price: 1740, optional: true  },
-          { id: 'essential-services', label: 'Quota serveis essencials', price: 1490, optional: false },
-          { id: 'dj',                 label: 'DJ',                       price: 1250, optional: false },
-          { id: 'accommodation',      label: 'Allotjament',              price: 1390, optional: true,
-            mandatoryWhen: (dow, month) => dow === 6 && [5,6,7,8,9,10].includes(month) },
-          { id: 'gardenaperitif',    label: "Aperitiu al jardí",        pricePerPerson: 10, minPrice: 1000, optional: true },
-          ...QUANTITY_EXTRAS[2027],
-        ],
+        2026: [],
+        2027: [],
       },
     },
   },
@@ -565,6 +577,24 @@ function getExtras(venueId, year) {
   return v.extras[usedYear] || [];
 }
 
+function applySpreadsheetExtras(extrasByVenue) {
+  for (const venue of VENUES) {
+    const venueExtras = extrasByVenue?.[venue.id] || {};
+    PRICE_CONFIG.venues[venue.id].extras = venueExtras;
+  }
+}
+
+window.__uauuDataReady = loadExtrasFromSpreadsheet()
+  .then(extrasByVenue => {
+    applySpreadsheetExtras(extrasByVenue);
+    return extrasByVenue;
+  })
+  .catch(err => {
+    console.error('No s\'han pogut carregar els serveis des del full de càlcul:', err);
+    applySpreadsheetExtras({});
+    return {};
+  });
+
 function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantities, extraOptions = {}, extraVariants = {} }) {
   if (!venue || !date || guests < 1) return null;
   const d = new Date(date + 'T12:00:00');
@@ -637,8 +667,8 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
         : `${eur(currentPrice)} base`;
     } else if (e.quantityBased) {
       computedPrice = quantity * currentPrice;
-      // Actualitzem el detall amb el nom de la variant si existeix
-      priceDetail = `${quantity} ${e.unit === 'unit' ? 'unit.' : 'pack/s'}${variantSuffix} × ${eur(currentPrice)}`;
+      const unitLabel = e.unit === 'person' ? 'persones' : e.unit === 'pack' ? 'packs' : 'unitats';
+      priceDetail = `${quantity} ${unitLabel}${variantSuffix} × ${eur(currentPrice)}`;
     } else if (e.pricingFn) {
       computedPrice = e.pricingFn(guests) || 0;
       priceDetail = e.pricingFnDetail ? e.pricingFnDetail(guests) : null;

@@ -17,6 +17,18 @@ function ExtrasSection({
   const extras = getExtras(venueId, year).filter(e => !['menu-staff', 'menu-infantil'].includes(e.id));
   if (!extras.length) return null;
 
+  function quantityUnitLabel(extra) {
+    if (extra.unit === 'person') return 'persones';
+    if (extra.unit === 'pack') return 'packs';
+    return 'unitats';
+  }
+
+  function quantityInputLabel(extra) {
+    if (extra.unit === 'person') return 'Quantes persones?';
+    if (extra.unit === 'pack') return 'Quants packs?';
+    return 'Quantes unitats?';
+  }
+
   const dow = date ? new Date(date + 'T12:00:00').getDay() : null;
   const month = date ? new Date(date + 'T12:00:00').getMonth() + 1 : null;
 
@@ -44,7 +56,7 @@ function ExtrasSection({
           : isBarLliure
             ? `2h incloses`
             : e.quantityBased
-              ? `${eur(currentPrice)}/${e.unit === 'unit' ? 'unit.' : 'pack'} + IVA`
+              ? `${eur(currentPrice)}/${quantityUnitLabel(e)} + IVA`
               : e.pricePerPerson
                 ? `${eur(e.pricePerPerson)}/pers. (mínim ${eur(e.minPrice)}) + IVA`
                 : `${eur(currentPrice)} + IVA`;
@@ -137,11 +149,14 @@ function ExtrasSection({
                   type="number"
                   min={0}
                   step={1}
+                  inputMode="numeric"
+                  placeholder="0"
                   value={quantity}
                   onChange={ev => onQuantityChange(e.id, normalizeQuantity(ev.target.value))}
-                  aria-label={`${e.label} quantitat`}
+                  aria-label={quantityInputLabel(e)}
+                  title={quantityInputLabel(e)}
                 />
-                <span className="extra-quantity-unit">{e.unit === 'unit' ? 'unit.' : 'pack'}</span>
+                <span className="extra-quantity-unit">{quantityUnitLabel(e)}</span>
               </div>
             ) : isMandatory ? (
               <div style={{ fontSize: 12, fontFamily: 'var(--font-sans)', letterSpacing: '0.1em', color: 'var(--color-muted)', textTransform: 'uppercase', marginLeft: 16 }}>Inclòs</div>
@@ -157,4 +172,3 @@ function ExtrasSection({
     </div>
   );
 }
-

@@ -207,4 +207,10 @@ function setVariant(id, variantId) {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+const mountApp = () => ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+if (window.__uauuDataReady && typeof window.__uauuDataReady.then === 'function') {
+  window.__uauuDataReady.then(mountApp).catch(() => mountApp());
+} else {
+  mountApp();
+}
