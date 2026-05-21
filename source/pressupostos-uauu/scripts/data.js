@@ -50,13 +50,31 @@ function parseYearCell(value) {
 function parseVenueIds(value) {
   const raw = String(value ?? '').trim();
   if (!raw) return [];
-  if (raw === '*' || raw.toLowerCase() === 'totes' || raw.toLowerCase() === 'all') {
+  const normalizedRaw = normText(raw);
+  if (
+    raw === '*' ||
+    normalizedRaw === 'totes' ||
+    normalizedRaw === 'all' ||
+    normalizedRaw.includes('totes') ||
+    normalizedRaw.includes('all')
+  ) {
     return VENUES.map(v => v.id);
   }
-  const normalized = normText(raw);
+  const normalized = normalizedRaw;
+  const rawTokens = normalized
+    .split(/[,;/|+\n]/)
+    .map(t => t.trim())
+    .filter(Boolean);
+
   return VENUES
-    .filter(v => normalized.includes(normText(v.name)) || normalized.includes(normText(v.id)))
-    .map(v => v.id);
+    .filter(v => {
+      const venueName = normText(v.name);
+      const venueId = normText(v.id);
+      if (normalized.includes(venueName) || normalized.includes(venueId)) return true;
+      return rawTokens.some(t => t === venueName || t === venueId || t.includes(venueName) || venueName.includes(t));
+    })
+    .map(v => v.id)
+    .filter((id, idx, arr) => arr.indexOf(id) === idx);
 }
 
 function parseUnitStyle(value) {
