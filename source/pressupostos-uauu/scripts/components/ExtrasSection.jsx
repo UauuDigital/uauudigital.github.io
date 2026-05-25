@@ -162,13 +162,42 @@
       {visibleExtras.map(e => {
         const condMandatory = e.mandatoryWhen && dow !== null ? e.mandatoryWhen(dow, month) : false;
         const isMandatory = !e.optional || condMandatory;
+        const isSelected = isExtraSelected(e);
         const canDeactivate = e.optional && !isMandatory;
         const quantity = e.quantityBased ? (extraQuantities?.[e.id] ?? 0) : null;
         const opts = extraOptions?.[e.id] || {};
         const isCookieBar = e.id === 'cookiebar';
         const isBarLliure = e.id === 'barlliure';
+        const hasDropdownOptions = Array.isArray(e.dropdownOptions) && e.dropdownOptions.length > 0;
+        const selectedDropdownOption = hasDropdownOptions
+          ? e.dropdownOptions.find(opt => opt.id === opts.dropdownSelection) || e.dropdownOptions[0]
+          : null;
 
         let currentPrice = e.price || 0;
+        if (selectedDropdownOption) currentPrice = selectedDropdownOption.price;
+        const isLlinda = e.extraType === 'llinda' || e.thresholdMain !== undefined || e.thresholdFinal !== undefined;
+        let llindaDetail = null;
+        if (isLlinda) {
+          const thresholdMain = Number(e.thresholdMain);
+          const thresholdFinal = Number(e.thresholdFinal);
+          const thresholdPriceBelow = Number(e.thresholdPriceBelow ?? currentPrice ?? 0);
+          const thresholdPriceAbove = Number(e.thresholdPriceAbove ?? 0);
+          const hasMain = Number.isFinite(thresholdMain);
+          const hasFinal = Number.isFinite(thresholdFinal);
+          if (hasMain && guests < thresholdMain) {
+            currentPrice = Number.isFinite(thresholdPriceBelow) ? thresholdPriceBelow : 0;
+            llindaDetail = `< ${thresholdMain}: preu fixe ${eur(currentPrice)}`;
+          } else if (hasFinal && guests > thresholdFinal) {
+            const diffGuests = guests - thresholdFinal;
+            const basePrice = Number(e.price || 0);
+            currentPrice = basePrice + (diffGuests * thresholdPriceAbove);
+            llindaDetail = `${eur(basePrice)} + (${guests} - ${thresholdFinal}) × ${eur(thresholdPriceAbove)} = ${eur(currentPrice)}`;
+          } else if (hasMain && hasFinal) {
+            llindaDetail = `${thresholdMain} <= ${guests} <= ${thresholdFinal}: preu base ${eur(e.price || 0)}`;
+          } else if (!hasMain && hasFinal) {
+            llindaDetail = `Revisar columna llinda principi (no detectada). Llinda final: ${thresholdFinal}`;
+          }
+        }
         if (e.variants && extraVariants?.[e.id]) {
           const variant = e.variants.find(v => v.id === extraVariants[e.id]);
           if (variant) currentPrice = variant.price;
@@ -182,6 +211,8 @@
             ? `2h incloses`
             : e.quantityBased
               ? `${eur(currentPrice)}/${quantityUnitLabel(e)} + IVA`
+              : isLlinda
+                ? `${eur(currentPrice)} + IVA (llinda)`
               : e.pricePerPerson
                 ? `${eur(e.pricePerPerson)}/pers. (mÃ­nim ${eur(e.minPrice)}) + IVA`
                 : `${eur(currentPrice)} + IVA`;
@@ -194,6 +225,20 @@
               <div className="extra-label">
                 {getExtraLabel(e.id, lang) || e.label}
                 {isMandatory && <span className="extra-badge badge-mandatory">{mandatoryLabel}</span>}
+                {hasDropdownOptions && (isMandatory || isSelected) && (
+                  <select
+                    className="variant-select"
+                    value={selectedDropdownOption?.id || ''}
+                    onChange={(ev) => onOptionChange(e.id, 'dropdownSelection', ev.target.value)}
+                    style={{ marginLeft: '10px' }}
+                  >
+                    {e.dropdownOptions.map(opt => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label} ({eur(opt.price)})
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               {e.variants && (e.quantityBased ? quantity > 0 : selectedExtras[e.id]) && (
@@ -212,6 +257,11 @@
               )}
 
               <div className="extra-price">{priceLabel}</div>
+              {llindaDetail && (
+                <div className="li-detail" style={{ marginTop: '4px' }}>
+                  {llindaDetail}
+                </div>
+              )}
             </div>
 
             {isBarLliure ? (
