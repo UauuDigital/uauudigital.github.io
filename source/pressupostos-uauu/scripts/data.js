@@ -50,13 +50,31 @@ function parseYearCell(value) {
 function parseVenueIds(value) {
   const raw = String(value ?? '').trim();
   if (!raw) return [];
-  if (raw === '*' || raw.toLowerCase() === 'totes' || raw.toLowerCase() === 'all') {
+  const normalizedRaw = normText(raw);
+  if (
+    raw === '*' ||
+    normalizedRaw === 'totes' ||
+    normalizedRaw === 'all' ||
+    normalizedRaw.includes('totes') ||
+    normalizedRaw.includes('all')
+  ) {
     return VENUES.map(v => v.id);
   }
-  const normalized = normText(raw);
+  const normalized = normalizedRaw;
+  const rawTokens = normalized
+    .split(/[,;/|+\n]/)
+    .map(t => t.trim())
+    .filter(Boolean);
+
   return VENUES
-    .filter(v => normalized.includes(normText(v.name)) || normalized.includes(normText(v.id)))
-    .map(v => v.id);
+    .filter(v => {
+      const venueName = normText(v.name);
+      const venueId = normText(v.id);
+      if (normalized.includes(venueName) || normalized.includes(venueId)) return true;
+      return rawTokens.some(t => t === venueName || t === venueId || t.includes(venueName) || venueName.includes(t));
+    })
+    .map(v => v.id)
+    .filter((id, idx, arr) => arr.indexOf(id) === idx);
 }
 
 function parseUnitStyle(value) {
@@ -95,12 +113,88 @@ const SPREADSHEET_COLUMNS = {
   unit: ['estil d\'unitat', 'unitat', 'unit style'],
   quantity: ['quantityBased'],
   optional: ['si es opcional', 'opcional', 'optional'],
+  extraType: ['extres', 'extra type', 'tipus extres', 'tipus'],
+  dropdown: ['desplegable', 'opcions desplegable', 'opciones desplegable'],
+  thresholdMain: ['llinda principal', 'llinda inici', 'llinda principi', 'llindar principal', 'umbral principal', 'llinda primer', 'llinda primera'],
+  thresholdFinal: ['llinda final', 'llindar final', 'umbral final', 'llinda maxim', 'llinda màxim', 'llinda max', 'llinda màx'],
+  thresholdPriceBelow: ['llinda preu x<0', 'llinda preu x < 0', 'preu llinda inferior', 'precio llinda inferior'],
+  thresholdPriceAbove: ['llinda preu x>0', 'llinda preu x > 0', 'preu llinda superior', 'precio llinda superior', 'preu llinda max', 'preu llinda maxim', 'preu llinda màxim'],
 };
+
+function parseExtraType(value) {
+  const txt = normText(value).replace(/[^a-z0-9\s-]/g, ' ');
+  if (!txt.trim()) return null;
+  if (/(despleg|dropdown|select|selector|opcio|opcion|opciones)/.test(txt)) return 'desplegable';
+  if (/(llinda|header|titol|titulo)/.test(txt)) return 'llinda';
+  if (/(altres|otros|other)/.test(txt)) return 'altres-extres';
+  return null;
+}
+
+function parseDropdownPairs(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return [];
+
+  const normalized = raw
+    .replace(/[，؛]/g, ',')
+    .replace(/[｜]/g, '|')
+    .replace(/[＝]/g, '=')
+    .replace(/[：]/g, ':');
+
+  const parts = normalized
+    .split(/[,;\n|]+/)
+    .map(part => part.trim())
+    .filter(Boolean);
+
+  return raw
+    .length && parts.length
+    ? parts
+    .map((part, idx) => {
+      const pairMatch = part.match(/^(.*?)\s*(?::|=|->|-)\s*(.*?)$/);
+      const labelRaw = pairMatch ? pairMatch[1] : part;
+      const priceRaw = pairMatch ? pairMatch[2] : '';
+      const label = String(labelRaw ?? '').trim();
+      const extractedPrice = String(priceRaw || '').match(/-?\d+(?:[.,]\d+)?/);
+      const price = extractedPrice ? parseMoney(extractedPrice[0]) : parseMoney(priceRaw);
+      if (!label) return null;
+      return {
+        id: `${buildServiceId(label, idx)}-${idx + 1}`,
+        label,
+        price: price ?? 0,
+      };
+    })
+    .filter(Boolean)
+    : [];
+}
 
 function pickColumn(row, keys) {
   for (const key of Object.keys(row)) {
     const normalizedKey = normText(key);
     if (keys.some(alias => normalizedKey === normText(alias) || normalizedKey.includes(normText(alias)) || normText(alias).includes(normalizedKey))) {
+      return row[key];
+    }
+  }
+  return undefined;
+}
+
+function pickColumnExcluding(row, keys, excludedPatterns = []) {
+  for (const key of Object.keys(row)) {
+    const normalizedKey = normText(key);
+    if (excludedPatterns.some(p => normalizedKey.includes(normText(p)))) continue;
+    if (keys.some(alias => normalizedKey === normText(alias) || normalizedKey.includes(normText(alias)) || normText(alias).includes(normalizedKey))) {
+      return row[key];
+    }
+  }
+  return undefined;
+}
+
+function pickColumnExcludingStrict(row, keys, excludedPatterns = []) {
+  for (const key of Object.keys(row)) {
+    const normalizedKey = normText(key);
+    if (excludedPatterns.some(p => normalizedKey.includes(normText(p)))) continue;
+    if (keys.some(alias => {
+      const a = normText(alias);
+      return normalizedKey === a || normalizedKey.includes(a);
+    })) {
       return row[key];
     }
   }
@@ -113,6 +207,34 @@ function pickColumnLoose(row, patterns) {
     if (patterns.every(p => normalizedKey.includes(normText(p)))) {
       return row[key];
     }
+  }
+  return undefined;
+}
+
+function pickColumnLooseExcluding(row, patterns, excludedPatterns = []) {
+  for (const key of Object.keys(row)) {
+    const normalizedKey = normText(key);
+    if (excludedPatterns.some(p => normalizedKey.includes(normText(p)))) continue;
+    if (patterns.every(p => normalizedKey.includes(normText(p)))) {
+      return row[key];
+    }
+  }
+  return undefined;
+}
+
+function pickColumnRegex(row, regexList) {
+  for (const key of Object.keys(row)) {
+    const normalizedKey = normText(key);
+    if (regexList.some(rx => rx.test(normalizedKey))) return row[key];
+  }
+  return undefined;
+}
+
+function pickColumnRegexExcluding(row, regexList, excludedPatterns = []) {
+  for (const key of Object.keys(row)) {
+    const normalizedKey = normText(key);
+    if (excludedPatterns.some(p => normalizedKey.includes(normText(p)))) continue;
+    if (regexList.some(rx => rx.test(normalizedKey))) return row[key];
   }
   return undefined;
 }
@@ -130,6 +252,35 @@ function buildExtrasByVenue(rows) {
     const unitCell = pickColumn(row, SPREADSHEET_COLUMNS.unit);
     const quantityCell = pickColumn(row, SPREADSHEET_COLUMNS.quantity) ?? pickColumnLoose(row, ['quantity', 'based']);
     const optionalCell = pickColumn(row, SPREADSHEET_COLUMNS.optional);
+    const extraTypeCell = pickColumn(row, SPREADSHEET_COLUMNS.extraType);
+    const dropdownCell = pickColumn(row, SPREADSHEET_COLUMNS.dropdown);
+    const thresholdMainCell =
+      pickColumnExcludingStrict(row, SPREADSHEET_COLUMNS.thresholdMain, ['extra']) ??
+      pickColumnLooseExcluding(row, ['llinda', 'principi'], ['extra']) ??
+      pickColumnLooseExcluding(row, ['llinda', 'princi'], ['extra']) ??
+      pickColumnLooseExcluding(row, ['llind', 'principi'], ['extra']) ??
+      pickColumnLooseExcluding(row, ['llinda', 'inici'], ['extra']) ??
+      pickColumnLooseExcluding(row, ['umbral', 'inicio'], ['extra']) ??
+      pickColumnRegexExcluding(row, [/llind.*princip/i, /llind.*principal/i, /llind.*inici/i, /llind.*start/i, /llind.*min/i], ['extra']);
+    const thresholdFinalCell =
+      pickColumnExcludingStrict(row, SPREADSHEET_COLUMNS.thresholdFinal, ['extra']) ??
+      pickColumnLooseExcluding(row, ['llinda', 'final'], ['extra']) ??
+      pickColumnLooseExcluding(row, ['llinda', 'max'], ['extra']) ??
+      pickColumnLooseExcluding(row, ['umbral', 'final'], ['extra']) ??
+      pickColumnRegexExcluding(row, [/llinda.*final/i, /llinda.*max/i], ['extra']);
+    const thresholdPriceBelowCell =
+      pickColumnExcludingStrict(row, SPREADSHEET_COLUMNS.thresholdPriceBelow, ['extra']) ??
+      pickColumnLooseExcluding(row, ['llinda', 'preu', 'x<0'], ['extra']) ??
+      pickColumnLooseExcluding(row, ['llinda', 'preu', 'inferior'], ['extra']) ??
+      pickColumnLooseExcluding(row, ['umbral', 'precio', 'inferior'], ['extra']) ??
+      pickColumnRegexExcluding(row, [/llinda.*preu.*x\s*<?\s*0/i, /llinda.*preu.*inferior/i], ['extra']);
+    const thresholdPriceAboveCell =
+      pickColumnExcludingStrict(row, SPREADSHEET_COLUMNS.thresholdPriceAbove, ['extra']) ??
+      pickColumnLooseExcluding(row, ['llinda', 'preu', 'x>0'], ['extra']) ??
+      pickColumnLooseExcluding(row, ['llinda', 'preu', '0<x'], ['extra']) ??
+      pickColumnLooseExcluding(row, ['llinda', 'preu', 'superior'], ['extra']) ??
+      pickColumnLooseExcluding(row, ['umbral', 'precio', 'superior'], ['extra']) ??
+      pickColumnRegexExcluding(row, [/llinda.*preu.*x\s*>?\s*0/i, /llinda.*preu.*0\s*<\s*x/i, /llinda.*preu.*superior/i, /llinda.*preu.*max/i], ['extra']);
 
     if (!label || !venueCell || !yearCell) return;
     const venueIds = parseVenueIds(venueCell);
@@ -141,7 +292,13 @@ function buildExtrasByVenue(rows) {
     const quantityBased = parseBool(quantityCell, false) || ['quantity', 'quantitat', 'quantitat?', 'q', 'qty', 'quantitybased', 'yes', 'true', 'verdadero', 'vrai', 'si', 'sí'].includes(normText(quantityCell));
     const optional = parseBool(optionalCell, true);
     const unit = parseUnitStyle(unitCell);
-    const signature = `${id}|${year}|${venueIds.slice().sort().join(',')}|${quantityBased ? 1 : 0}|${optional ? 1 : 0}|${unit}|${price ?? ''}`;
+    const extraType = parseExtraType(extraTypeCell);
+    const dropdownOptions = parseDropdownPairs(dropdownCell);
+    const thresholdMain = parseMoney(thresholdMainCell);
+    const thresholdFinal = parseMoney(thresholdFinalCell);
+    const thresholdPriceBelow = parseMoney(thresholdPriceBelowCell);
+    const thresholdPriceAbove = parseMoney(thresholdPriceAboveCell);
+    const signature = `${id}|${year}|${venueIds.slice().sort().join(',')}|${quantityBased ? 1 : 0}|${optional ? 1 : 0}|${unit}|${price ?? ''}|${extraType ?? ''}|${dropdownOptions.map(o => `${o.label}:${o.price}`).join(',')}|${thresholdMain ?? ''}|${thresholdFinal ?? ''}|${thresholdPriceBelow ?? ''}|${thresholdPriceAbove ?? ''}`;
     if (seen.has(signature)) return;
     seen.add(signature);
 
@@ -153,6 +310,26 @@ function buildExtrasByVenue(rows) {
     };
 
     if (price !== null) extra.price = price;
+    const hasThresholdData =
+      thresholdMain !== null ||
+      thresholdFinal !== null ||
+      thresholdPriceBelow !== null ||
+      thresholdPriceAbove !== null;
+
+    if (dropdownOptions.length) {
+      extra.dropdownOptions = dropdownOptions;
+      extra.extraType = extraType || 'desplegable';
+    } else if (hasThresholdData) {
+      extra.extraType = 'llinda';
+    } else if (extraType) {
+      extra.extraType = extraType;
+    }
+    if (extra.extraType === 'llinda' || hasThresholdData) {
+      if (thresholdMain !== null) extra.thresholdMain = thresholdMain;
+      if (thresholdFinal !== null) extra.thresholdFinal = thresholdFinal;
+      if (thresholdPriceBelow !== null) extra.thresholdPriceBelow = thresholdPriceBelow;
+      if (thresholdPriceAbove !== null) extra.thresholdPriceAbove = thresholdPriceAbove;
+    }
     if (quantityBased) {
       extra.quantityBased = true;
       extra.unit = unit;
@@ -628,6 +805,15 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
     let currentPrice = e.price || 0;
     let variantSuffix = "";
     const extraOpts = options[e.id] || {};
+    const hasDropdownOptions = Array.isArray(e.dropdownOptions) && e.dropdownOptions.length > 0;
+    const selectedDropdown = hasDropdownOptions
+      ? e.dropdownOptions.find(opt => opt.id === extraOpts.dropdownSelection) || e.dropdownOptions[0]
+      : null;
+
+    if (selectedDropdown) {
+      currentPrice = selectedDropdown.price;
+      variantSuffix = ` (${selectedDropdown.label})`;
+    }
 
     if (e.variants && extraVariants && extraVariants[e.id]) {
         const selectedVariant = e.variants.find(v => v.id === extraVariants[e.id]);
@@ -669,6 +855,25 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
       computedPrice = quantity * currentPrice;
       const unitLabel = e.unit === 'person' ? 'persones' : e.unit === 'pack' ? 'packs' : 'unitats';
       priceDetail = `${quantity} ${unitLabel}${variantSuffix} × ${eur(currentPrice)}`;
+    } else if (e.extraType === 'llinda' || e.thresholdMain !== undefined || e.thresholdFinal !== undefined) {
+      const thresholdMain = Number(e.thresholdMain);
+      const thresholdFinal = Number(e.thresholdFinal);
+      const thresholdPriceBelow = Number(e.thresholdPriceBelow ?? currentPrice ?? 0);
+      const thresholdPriceAbove = Number(e.thresholdPriceAbove ?? 0);
+      const hasMain = Number.isFinite(thresholdMain);
+      const hasFinal = Number.isFinite(thresholdFinal);
+
+      if (hasMain && guests < thresholdMain) {
+        // For the lower bracket, always force the fixed "x<0" price.
+        computedPrice = Number.isFinite(thresholdPriceBelow) ? thresholdPriceBelow : 0;
+        priceDetail = `Fixe (< ${thresholdMain} convidats)`;
+      } else if (hasFinal && guests > thresholdFinal) {
+        const diffGuests = guests - thresholdFinal;
+        computedPrice = currentPrice + (diffGuests * thresholdPriceAbove);
+        priceDetail = `${eur(currentPrice)} + (${diffGuests} × ${eur(thresholdPriceAbove)})`;
+      } else {
+        computedPrice = currentPrice;
+      }
     } else if (e.pricingFn) {
       computedPrice = e.pricingFn(guests) || 0;
       priceDetail = e.pricingFnDetail ? e.pricingFnDetail(guests) : null;
