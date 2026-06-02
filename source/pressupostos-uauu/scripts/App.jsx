@@ -1,49 +1,28 @@
-function App() {
+﻿function App() {
   const [form, setForm] = React.useState(() => {
     try {
       localStorage.removeItem('uauu-v2-form');
-    }
-    catch { }
-    return defaultForm();
+    } catch {}
+    return {
+      venue: '',
+      date: '',
+      guests: 80,
+      selectedExtras: {},
+      extraQuantities: {},
+      extraOptions: {},
+      extraVariants: { pernil: 'res' },
+      coupleName: '',
+      notes: '',
+    };
   });
-  const [lang, setLang] = React.useState(() => localStorage.getItem('uauu-lang') || 'ca');
-
-  function defaultForm() {
-    return { venue: '', date: '', guests: 80, selectedExtras: {}, extraQuantities: {}, coupleName: '', notes: '' };
-  }
-
-  function defaultForm() {
-  return { 
-    venue: '', 
-    date: '', 
-    guests: 80, 
-    selectedExtras: {}, 
-    extraQuantities: {}, 
-    extraOptions: {},
-    extraVariants: { pernil: 'res' }, // Estil per defecte
-    coupleName: '', 
-    notes: '' 
-  };
-}
-
-// Afegeix aquesta funció a prop de setExtra
-function setVariant(id, variantId) {
-  setForm(f => ({ 
-    ...f, 
-    extraVariants: { ...f.extraVariants, [id]: variantId } 
-  }));
-}
-
-  React.useEffect(() => { localStorage.setItem('uauu-lang', lang); }, [lang]);
+  const [lang, setLang] = React.useState('ca');
 
   function set(key, val) { setForm(f => ({ ...f, [key]: val })); }
   function setExtra(id, val) {
     setForm(f => ({
       ...f,
       selectedExtras: { ...f.selectedExtras, [id]: val },
-      extraQuantities: val || id !== 'cookiebar'
-        ? f.extraQuantities
-        : { ...f.extraQuantities, [id]: 0 }
+      extraQuantities: val || id !== 'cookiebar' ? f.extraQuantities : { ...f.extraQuantities, [id]: 0 }
     }));
   }
   function setQuantity(id, val) { setForm(f => ({ ...f, extraQuantities: { ...f.extraQuantities, [id]: val } })); }
@@ -54,6 +33,12 @@ function setVariant(id, variantId) {
         ...f.extraOptions,
         [id]: { ...(f.extraOptions?.[id] || {}), [key]: value }
       }
+    }));
+  }
+  function setVariant(id, variantId) {
+    setForm(f => ({
+      ...f,
+      extraVariants: { ...f.extraVariants, [id]: variantId }
     }));
   }
 
@@ -69,7 +54,7 @@ function setVariant(id, variantId) {
     setForm(f => ({ ...f, selectedExtras: {}, extraQuantities: {} }));
   }, [form.venue, dateYear]);
 
-  const quote = React.useMemo(() => computeQuote(form), [form]);
+  const quote = React.useMemo(() => computeQuote({ ...form, lang }), [form, lang]);
 
   return (
     <div>
@@ -83,9 +68,15 @@ function setVariant(id, variantId) {
         </div>
         <div className="page-header-center">
           <span className="page-header-label">Configurador de Pressupostos</span>
-          <div className="lang-selector">
+          <div className="lang-selector" aria-label="Selector d'idioma">
             {['ca', 'es', 'en'].map(l => (
-              <button key={l} className={`lang-btn ${lang === l ? 'active' : ''}`} onClick={() => setLang(l)}>
+              <button
+                key={l}
+                type="button"
+                className={`lang-btn ${lang === l ? 'active' : ''}`}
+                aria-pressed={lang === l}
+                onClick={() => setLang(l)}
+              >
                 {l.toUpperCase()}
               </button>
             ))}
@@ -96,64 +87,41 @@ function setVariant(id, variantId) {
 
       <div className="app-body">
         <div className="form-panel">
-
-          {/* Venue */}
           <div className="form-section">
             <div className="section-title">Finca de la boda</div>
             <VenueCards value={form.venue} onChange={v => set('venue', v)} />
           </div>
 
-          {/* Date & Guests */}
           <div className="form-section">
             <div className="section-title">Detalls de l'esdeveniment</div>
             <div className="event-details-list">
               <div className="field">
                 <label>Data de la boda</label>
-                <input type="date" value={form.date} className={form.date ? 'filled' : ''}
-                  min={`${new Date().getFullYear()}-01-01`}
-                  onChange={e => set('date', e.target.value)} />
+                <input type="date" value={form.date} className={form.date ? 'filled' : ''} min={`${new Date().getFullYear()}-01-01`} onChange={e => set('date', e.target.value)} />
               </div>
               <div className="field">
                 <label>Nombre de convidats</label>
                 <GuestsControl value={form.guests} onChange={val => set('guests', val)} />
-                <input type="range" min={10} max={400} step={1} value={form.guests}
-                  onChange={e => set('guests', Number(e.target.value))} />
+                <input type="range" min={10} max={400} step={1} value={form.guests} onChange={e => set('guests', Number(e.target.value))} />
                 <div className="range-labels"><span>10</span><span>400</span></div>
               </div>
               <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
                 {menuStaffExtra && (
                   <div className="field" style={{ flex: 1 }}>
-                    <label>{getExtraLabel('menu-staff', lang)}</label>
+                    <label>Menú Staff</label>
                     <div className="event-extra-price" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <span>{eur(menuStaffExtra.price)}/pers. + IVA:</span>
-                      <input
-                        className="extra-quantity-input"
-                        type="number"
-                        min={0}
-                        step={1}
-                        value={form.extraQuantities[menuStaffExtra.id] ?? 0}
-                        onChange={e => setQuantity(menuStaffExtra.id, normalizeQuantity(e.target.value))}
-                        aria-label={`${getExtraLabel('menu-staff', lang)} quantitat`}
-                      />
+                      <input className="extra-quantity-input" type="number" min={0} step={1} value={form.extraQuantities[menuStaffExtra.id] ?? 0} onChange={e => setQuantity(menuStaffExtra.id, normalizeQuantity(e.target.value))} aria-label="Menú Staff quantitat" />
                       <span className="extra-quantity-unit">pers.</span>
                     </div>
                   </div>
                 )}
-
                 {menuInfantilExtra && (
                   <div className="field" style={{ flex: 1 }}>
-                    <label>{getExtraLabel('menu-infantil', lang)}</label>
+                    <label>Menú infantil</label>
                     <div className="event-extra-price" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <span>{eur(menuInfantilExtra.price)}/pers. + IVA:</span>
-                      <input
-                        className="extra-quantity-input"
-                        type="number"
-                        min={0}
-                        step={1}
-                        value={form.extraQuantities[menuInfantilExtra.id] ?? 0}
-                        onChange={e => setQuantity(menuInfantilExtra.id, normalizeQuantity(e.target.value))}
-                        aria-label={`${getExtraLabel('menu-infantil', lang)} quantitat`}
-                      />
+                      <input className="extra-quantity-input" type="number" min={0} step={1} value={form.extraQuantities[menuInfantilExtra.id] ?? 0} onChange={e => setQuantity(menuInfantilExtra.id, normalizeQuantity(e.target.value))} aria-label="Menú infantil quantitat" />
                       <span className="extra-quantity-unit">pers.</span>
                     </div>
                   </div>
@@ -163,7 +131,6 @@ function setVariant(id, variantId) {
             <DateInfoStrip venueId={form.venue} date={form.date} />
           </div>
 
-          {/* Dynamic extras */}
           <ExtrasSection
             venueId={form.venue}
             year={dateYear}
@@ -177,25 +144,20 @@ function setVariant(id, variantId) {
             onQuantityChange={setQuantity}
             onOptionChange={setExtraOption}
             onVariantChange={setVariant}
-            lang={lang}
           />
 
-          {/* Client info */}
           <div className="form-section">
             <div className="section-title">Dades de la parella</div>
             <div className="field-row full" style={{ marginBottom: 20 }}>
               <div className="field">
                 <label>Noms de la parella</label>
-                <input type="text" placeholder="p. ex. Anna & Marc"
-                  value={form.coupleName} className={form.coupleName ? 'filled' : ''}
-                  onChange={e => set('coupleName', e.target.value)} />
+                <input type="text" placeholder="p. ex. Anna & Marc" value={form.coupleName} className={form.coupleName ? 'filled' : ''} onChange={e => set('coupleName', e.target.value)} />
               </div>
             </div>
             <div className="field-row full">
               <div className="field">
                 <label>Notes addicionals</label>
-                <textarea rows={3} placeholder="Requisits especials, al·lèrgies, observacions..."
-                  value={form.notes} onChange={e => set('notes', e.target.value)} />
+                <textarea rows={3} placeholder="Requisits especials, al·lèrgies, observacions..." value={form.notes} onChange={e => set('notes', e.target.value)} />
               </div>
             </div>
           </div>
@@ -208,7 +170,6 @@ function setVariant(id, variantId) {
 }
 
 const mountApp = () => ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-
 if (window.__uauuDataReady && typeof window.__uauuDataReady.then === 'function') {
   window.__uauuDataReady.then(mountApp).catch(() => mountApp());
 } else {

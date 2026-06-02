@@ -1,4 +1,4 @@
-# Configurador de Pressupostos UAUU
+﻿# Configurador de Pressupostos UAUU
 
 Aplicació web estàtica pensada per a GitHub Pages.
 
@@ -8,7 +8,7 @@ Aplicació web estàtica pensada per a GitHub Pages.
 - `source/pressupostos-uauu/index.html`: pàgina principal del projecte.
 - `source/pressupostos-uauu/scripts/`: lògica separada en fitxers.
 - `source/pressupostos-uauu/styles.css`: maquetació i components.
-- `build/pressupostos-uauu-standalone.html`: exportació d'un sol fitxer.
+- `build/pressupostos-uauu-standalone.html`: exportació d'un sol fitxer, si cal distribuir una versió empaquetada.
 - `docs/adaptacio-menu-sense-gluten.pdf`: document de suport.
 
 ## On editar
@@ -16,16 +16,15 @@ Aplicació web estàtica pensada per a GitHub Pages.
 ### Configuració i dades
 - **Preus i mínims**: `source/pressupostos-uauu/scripts/config/pricing.js`
 - **Dades de les finques**: `source/pressupostos-uauu/scripts/config/venues.js`
-- **Traduccions**: `source/pressupostos-uauu/scripts/i18n/translations.js`
 
 ### Lògica de negoci
-- **Datos & Configuración**: `source/pressupostos-uauu/scripts/data.js` (precios, fincas, traducciones, funciones de cálculo)
+- **Dades & Configuració**: `source/pressupostos-uauu/scripts/data.js` (preus, finques i funcions de càlcul)
 - **Formatadors (EUR)**: `source/pressupostos-uauu/scripts/lib/formatters.js`
 - **Generador PDF**: `source/pressupostos-uauu/scripts/lib/pdfGenerator.js`
 
 ### Utilitats i components
 - **Utilitats d'entrada**: `source/pressupostos-uauu/scripts/utils/input.js`
-- **Componentes UI**: `source/pressupostos-uauu/scripts/components/`
+- **Components UI**: `source/pressupostos-uauu/scripts/components/`
   - `GuestsControl.jsx` - Control de nombre de convidats
   - `VenueCards.jsx` - Selector de finques
   - `Toggle.jsx` - Botó de selecció
@@ -38,10 +37,8 @@ Aplicació web estàtica pensada per a GitHub Pages.
 - Shell principal: `source/pressupostos-uauu/index.html`
 - Estils compartits: `source/pressupostos-uauu/colors_and_type.css`
 - Estil de la interfície: `source/pressupostos-uauu/styles.css`
-- Component de proves: `source/pressupostos-uauu/tweaks-panel.jsx`
 - Logos i imatges: `source/pressupostos-uauu/assets/`
 - Tipografies: `source/pressupostos-uauu/fonts/`
-- Fitxers penjats o captures: `source/pressupostos-uauu/uploads/`
 
 ## GitHub Pages
 

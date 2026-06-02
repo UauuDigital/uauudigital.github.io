@@ -11,7 +11,6 @@
   onQuantityChange,
   onOptionChange,
   onVariantChange,
-  lang
 }) {
   if (!venueId || !year) return null;
   const extras = getExtras(venueId, year).filter(e => !['menu-staff', 'menu-infantil'].includes(e.id));
@@ -36,7 +35,7 @@
   const optionalOptions = React.useMemo(() => {
     const counts = new Map();
     return optionalExtras.map(e => {
-      const baseLabel = String(getExtraLabel(e.id, lang) || e.label || '').trim();
+      const baseLabel = String(e.label || '').trim();
       const condMandatory = e.mandatoryWhen && dow !== null ? e.mandatoryWhen(dow, month) : false;
       const nextCount = (counts.get(baseLabel) || 0) + 1;
       counts.set(baseLabel, nextCount);
@@ -44,7 +43,7 @@
       const displayLabel = condMandatory ? `${uniqueLabel} — obligatori` : uniqueLabel;
       return { extra: e, baseLabel, displayLabel, condMandatory };
     });
-  }, [optionalExtras, lang, dow, month]);
+  }, [optionalExtras, dow, month]);
 
   function parseOptionalSelectionValue(value) {
     const raw = String(value || '').trim();
@@ -168,7 +167,7 @@
         const opts = extraOptions?.[e.id] || {};
         const isCookieBar = e.id === 'cookiebar';
         const isBarLliure = e.id === 'barlliure';
-        const hasDropdownOptions = Array.isArray(e.dropdownOptions) && e.dropdownOptions.length > 0;
+        const hasDropdownOptions = e.extraType === 'desplegable' && Array.isArray(e.dropdownOptions) && e.dropdownOptions.length > 0;
         const selectedDropdownOption = hasDropdownOptions
           ? e.dropdownOptions.find(opt => opt.id === opts.dropdownSelection) || e.dropdownOptions[0]
           : null;
@@ -214,7 +213,7 @@
               : isLlinda
                 ? `${eur(currentPrice)} + IVA (llinda)`
               : e.pricePerPerson
-                ? `${eur(e.pricePerPerson)}/pers. (mÃ­nim ${eur(e.minPrice)}) + IVA`
+                ? `${eur(e.pricePerPerson)}/pers. (mínim ${eur(e.minPrice)}) + IVA`
                 : `${eur(currentPrice)} + IVA`;
 
         const mandatoryLabel = condMandatory ? 'Obligatori (data sel.)' : 'Obligatori';
@@ -223,18 +222,21 @@
           <div key={e.id} className="extra-item">
             <div className="extra-info">
               <div className="extra-label">
-                {getExtraLabel(e.id, lang) || e.label}
+                {e.label}
                 {isMandatory && <span className="extra-badge badge-mandatory">{mandatoryLabel}</span>}
-                {hasDropdownOptions && (isMandatory || isSelected) && (
+                {hasDropdownOptions && (
                   <select
                     className="variant-select"
                     value={selectedDropdownOption?.id || ''}
-                    onChange={(ev) => onOptionChange(e.id, 'dropdownSelection', ev.target.value)}
+                    onChange={(ev) => {
+                      onOptionChange(e.id, 'dropdownSelection', ev.target.value);
+                      if (!isMandatory && !isSelected) onChange(e.id, true);
+                    }}
                     style={{ marginLeft: '10px' }}
                   >
                     {e.dropdownOptions.map(opt => (
                       <option key={opt.id} value={opt.id}>
-                        {opt.label} ({eur(opt.price)})
+                        {(opt.labels?.ca || opt.label)} ({eur(opt.price)})
                       </option>
                     ))}
                   </select>
@@ -250,7 +252,7 @@
                 >
                   {e.variants.map(v => (
                     <option key={v.id} value={v.id}>
-                      {getExtraLabel(v.id, lang) || v.label || v.labelKey || v.id} ({eur(v.price)})
+                      {v.label || v.labelKey || v.id} ({eur(v.price)})
                     </option>
                   ))}
                 </select>
@@ -314,23 +316,42 @@
                 )}
               </div>
             ) : e.quantityBased ? (
-              <div className="extra-quantity">
-                <input
-                  className="extra-quantity-input"
-                  type="number"
-                  min={0}
-                  step={1}
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={quantity}
-                  onChange={ev => onQuantityChange(e.id, normalizeQuantity(ev.target.value))}
-                  aria-label={quantityInputLabel(e)}
-                  title={quantityInputLabel(e)}
-                />
-                <span className="extra-quantity-unit">{quantityUnitLabel(e)}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div className="extra-quantity">
+                  <input
+                    className="extra-quantity-input"
+                    type="number"
+                    min={0}
+                    step={1}
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={quantity}
+                    onChange={ev => onQuantityChange(e.id, normalizeQuantity(ev.target.value))}
+                    aria-label={quantityInputLabel(e)}
+                    title={quantityInputLabel(e)}
+                  />
+                  <span className="extra-quantity-unit">{quantityUnitLabel(e)}</span>
+                </div>
+                {e.extraUnitPair && (
+                  <div className="extra-quantity">
+                    <input
+                      className="extra-quantity-input"
+                      type="number"
+                      min={0}
+                      step={1}
+                      inputMode="numeric"
+                      placeholder="0"
+                      value={opts.extraUnitQty ?? 0}
+                      onChange={ev => onOptionChange(e.id, 'extraUnitQty', Math.max(0, Math.round(Number(ev.target.value) || 0)))}
+                      aria-label={e.extraUnitPair?.label ? `Quants ${e.extraUnitPair.label}?` : 'Quantes unitats extra?'}
+                      title={e.extraUnitPair?.label ? `Quants ${e.extraUnitPair.label}?` : 'Quantes unitats extra?'}
+                    />
+                    <span className="extra-quantity-unit">{(e.extraUnitPair?.label || 'unitats extra')} ({eur(e.extraUnitPair?.price ?? 0)})</span>
+                  </div>
+                )}
               </div>
             ) : isMandatory ? (
-              <div style={{ fontSize: 12, fontFamily: 'var(--font-sans)', letterSpacing: '0.1em', color: 'var(--color-muted)', textTransform: 'uppercase', marginLeft: 16 }}>InclÃ²s</div>
+              <div style={{ fontSize: 12, fontFamily: 'var(--font-sans)', letterSpacing: '0.1em', color: 'var(--color-muted)', textTransform: 'uppercase', marginLeft: 16 }}>Inclòs</div>
             ) : (
               <div />
             )}
@@ -339,7 +360,7 @@
                 className="extra-remove-btn"
                 type="button"
                 onClick={() => deactivateOptionalExtra(e)}
-                aria-label={`Desactivar ${getExtraLabel(e.id, lang) || e.label}`}
+                aria-label={`Desactivar ${e.label}`}
                 title="Desactivar servei"
               >
                 ×

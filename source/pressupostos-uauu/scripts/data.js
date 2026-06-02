@@ -107,6 +107,9 @@ const VENUES = [
 
 const SPREADSHEET_COLUMNS = {
   name: ['nom servei', 'servei', 'nom'],
+  nameCa: ['nom servei', 'nomca', 'nom cat', 'nomcatala', 'nom català', 'nom catala'],
+  nameEs: ['nomcast', 'nom cast', 'nom castellà', 'nom castella', 'nomcastellano', 'nom castella'],
+  nameEn: ['nomeng', 'nom eng', 'nom anglès', 'nom angles', 'nom angles', 'name'],
   venue: ['masia', 'finca', 'venue'],
   year: ['any', 'curs'],
   price: ['preu', 'import'],
@@ -115,10 +118,14 @@ const SPREADSHEET_COLUMNS = {
   optional: ['si es opcional', 'opcional', 'optional'],
   extraType: ['extres', 'extra type', 'tipus extres', 'tipus'],
   dropdown: ['desplegable', 'opcions desplegable', 'opciones desplegable'],
+  extrasList: ['extresllista', 'extres llista', 'extraslist', 'extra list'],
   thresholdMain: ['llinda principal', 'llinda inici', 'llinda principi', 'llindar principal', 'umbral principal', 'llinda primer', 'llinda primera'],
   thresholdFinal: ['llinda final', 'llindar final', 'umbral final', 'llinda maxim', 'llinda màxim', 'llinda max', 'llinda màx'],
   thresholdPriceBelow: ['llinda preu x<0', 'llinda preu x < 0', 'preu llinda inferior', 'precio llinda inferior'],
   thresholdPriceAbove: ['llinda preu x>0', 'llinda preu x > 0', 'preu llinda superior', 'precio llinda superior', 'preu llinda max', 'preu llinda maxim', 'preu llinda màxim'],
+  extraUnitValue: ['extraunitat'],
+  extraExtresKind: ['extraextres', 'extra extres'],
+  extraSwitch: ['extraswitch', 'extra switch', 'extralista switch', 'extraextresswitch', 'exrta switch'],
 };
 
 function parseExtraType(value) {
@@ -130,46 +137,101 @@ function parseExtraType(value) {
   return null;
 }
 
-function parseDropdownPairs(value) {
+function wantsDropdown(extraListCell) {
+  const txt = normText(extraListCell);
+  return /(^|[\s,;/|])despleg/.test(txt) || txt === 'desplegable';
+}
+
+function getOptionLabel(option, lang = 'ca') {
+  return String(option?.labels?.[lang] || option?.labels?.ca || option?.label || '').trim();
+}
+
+function parseServiceNames(row) {
+  const ca = pickColumn(row, SPREADSHEET_COLUMNS.nameCa) ?? pickColumn(row, SPREADSHEET_COLUMNS.name);
+  const es = pickColumn(row, SPREADSHEET_COLUMNS.nameEs);
+  const en = pickColumn(row, SPREADSHEET_COLUMNS.nameEn);
+  const base = String(ca ?? es ?? en ?? '').trim();
+  if (!base) return null;
+  return {
+    ca: String(ca ?? base).trim(),
+    es: String(es ?? ca ?? base).trim(),
+    en: String(en ?? ca ?? base).trim(),
+  };
+}
+
+function parseJsonOptions(value) {
   const raw = String(value ?? '').trim();
   if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    const arr = Array.isArray(parsed) ? parsed : [parsed];
+    return arr.map((item, idx) => {
+      if (!item || typeof item !== 'object') return null;
+      const ca = String(item.CAT ?? item.ca ?? item.Ca ?? item.label ?? item.name ?? '').trim();
+      const es = String(item.CAST ?? item.cast ?? item.es ?? item.ES ?? ca).trim();
+      const en = String(item.ENG ?? item.eng ?? item.en ?? item.EN ?? ca).trim();
+      const price = parseMoney(item.PREU ?? item.price ?? item.preu ?? item.amount);
+      if (!ca) return null;
+      return { id: `${buildServiceId(ca, idx)}-${idx + 1}`, labels: { ca, es, en }, label: ca, price: price ?? 0 };
+    }).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
 
-  const normalized = raw
-    .replace(/[，؛]/g, ',')
-    .replace(/[｜]/g, '|')
-    .replace(/[＝]/g, '=')
-    .replace(/[：]/g, ':');
+function parseNamePricePair(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return null;
+  const parts = raw.split(',').map(s => s.trim());
+  if (parts.length < 2) return null;
+  const label = parts[0];
+  const price = parseMoney(parts[1]);
+  if (!label) return null;
+  return { label, price: price ?? 0 };
+}
 
-  const parts = normalized
-    .split(/[,;\n|]+/)
-    .map(part => part.trim())
-    .filter(Boolean);
+function parseExtraUnitValue(row) {
+  for (const key of Object.keys(row || {})) {
+    if (normText(key) === 'extraunitat') {
+      return row[key];
+    }
+  }
+  return '';
+}
 
-  return raw
-    .length && parts.length
-    ? parts
-    .map((part, idx) => {
-      const pairMatch = part.match(/^(.*?)\s*(?::|=|->|-)\s*(.*?)$/);
-      const labelRaw = pairMatch ? pairMatch[1] : part;
-      const priceRaw = pairMatch ? pairMatch[2] : '';
-      const label = String(labelRaw ?? '').trim();
-      const extractedPrice = String(priceRaw || '').match(/-?\d+(?:[.,]\d+)?/);
-      const price = extractedPrice ? parseMoney(extractedPrice[0]) : parseMoney(priceRaw);
-      if (!label) return null;
-      return {
-        id: `${buildServiceId(label, idx)}-${idx + 1}`,
-        label,
-        price: price ?? 0,
-      };
-    })
-    .filter(Boolean)
-    : [];
+function parseExtraExtresValue(row) {
+  const raw = String(pickColumn(row, SPREADSHEET_COLUMNS.extraExtresKind) ?? '').trim();
+  const sw = String(pickColumn(row, SPREADSHEET_COLUMNS.extraSwitch) ?? '').trim();
+  const parsePairs = (text) => {
+    const rawText = String(text ?? '').trim();
+    if (!rawText) return [];
+    const tokens = rawText.split(',').map(s => s.trim()).filter(Boolean);
+    const out = [];
+    for (let i = 0; i + 1 < tokens.length; i += 2) {
+      const ca = tokens[i];
+      const price = parseMoney(tokens[i + 1]);
+      if (!ca) continue;
+      out.push({ id: `${buildServiceId(ca, i)}-${(i / 2) + 1}`, labels: { ca, es: ca, en: ca }, label: ca, price: price ?? 0 });
+    }
+    return out;
+  };
+  return [...parsePairs(raw), ...parsePairs(sw)];
 }
 
 function pickColumn(row, keys) {
   for (const key of Object.keys(row)) {
     const normalizedKey = normText(key);
     if (keys.some(alias => normalizedKey === normText(alias) || normalizedKey.includes(normText(alias)) || normText(alias).includes(normalizedKey))) {
+      return row[key];
+    }
+  }
+  return undefined;
+}
+
+function pickColumnStrict(row, keys) {
+  for (const key of Object.keys(row)) {
+    const normalizedKey = normText(key);
+    if (keys.some(alias => normalizedKey === normText(alias))) {
       return row[key];
     }
   }
@@ -245,15 +307,16 @@ function buildExtrasByVenue(rows) {
   const seen = new Set();
 
   rows.forEach((row, index) => {
-    const label = pickColumn(row, SPREADSHEET_COLUMNS.name);
+    const labels = parseServiceNames(row);
     const venueCell = pickColumn(row, SPREADSHEET_COLUMNS.venue);
     const yearCell = pickColumn(row, SPREADSHEET_COLUMNS.year);
     const priceCell = pickColumn(row, SPREADSHEET_COLUMNS.price);
     const unitCell = pickColumn(row, SPREADSHEET_COLUMNS.unit);
     const quantityCell = pickColumn(row, SPREADSHEET_COLUMNS.quantity) ?? pickColumnLoose(row, ['quantity', 'based']);
     const optionalCell = pickColumn(row, SPREADSHEET_COLUMNS.optional);
-    const extraTypeCell = pickColumn(row, SPREADSHEET_COLUMNS.extraType);
+    const extraTypeCell = pickColumnStrict(row, SPREADSHEET_COLUMNS.extraType);
     const dropdownCell = pickColumn(row, SPREADSHEET_COLUMNS.dropdown);
+    const extrasListCell = pickColumnStrict(row, SPREADSHEET_COLUMNS.extrasList);
     const thresholdMainCell =
       pickColumnExcludingStrict(row, SPREADSHEET_COLUMNS.thresholdMain, ['extra']) ??
       pickColumnLooseExcluding(row, ['llinda', 'principi'], ['extra']) ??
@@ -282,30 +345,34 @@ function buildExtrasByVenue(rows) {
       pickColumnLooseExcluding(row, ['umbral', 'precio', 'superior'], ['extra']) ??
       pickColumnRegexExcluding(row, [/llinda.*preu.*x\s*>?\s*0/i, /llinda.*preu.*0\s*<\s*x/i, /llinda.*preu.*superior/i, /llinda.*preu.*max/i], ['extra']);
 
-    if (!label || !venueCell || !yearCell) return;
+    if (!labels || !venueCell || !yearCell) return;
     const venueIds = parseVenueIds(venueCell);
     const year = parseYearCell(yearCell);
     const price = parseMoney(priceCell);
     if (!venueIds.length || !year) return;
 
-    const id = buildServiceId(label, index);
+    const id = buildServiceId(labels.ca || labels.es || labels.en, index);
     const quantityBased = parseBool(quantityCell, false) || ['quantity', 'quantitat', 'quantitat?', 'q', 'qty', 'quantitybased', 'yes', 'true', 'verdadero', 'vrai', 'si', 'sí'].includes(normText(quantityCell));
     const optional = parseBool(optionalCell, true);
     const unit = parseUnitStyle(unitCell);
-    const extraType = parseExtraType(extraTypeCell);
-    const dropdownOptions = parseDropdownPairs(dropdownCell);
+    const dropdownOptions = parseJsonOptions(dropdownCell);
+    const extraListType = normText(extrasListCell);
+    const extraExtresOptions = parseExtraExtresValue(row);
+    const extraUnitPair = parseNamePricePair(parseExtraUnitValue(row));
     const thresholdMain = parseMoney(thresholdMainCell);
     const thresholdFinal = parseMoney(thresholdFinalCell);
     const thresholdPriceBelow = parseMoney(thresholdPriceBelowCell);
     const thresholdPriceAbove = parseMoney(thresholdPriceAboveCell);
-    const signature = `${id}|${year}|${venueIds.slice().sort().join(',')}|${quantityBased ? 1 : 0}|${optional ? 1 : 0}|${unit}|${price ?? ''}|${extraType ?? ''}|${dropdownOptions.map(o => `${o.label}:${o.price}`).join(',')}|${thresholdMain ?? ''}|${thresholdFinal ?? ''}|${thresholdPriceBelow ?? ''}|${thresholdPriceAbove ?? ''}`;
+    const signature = `${id}|${year}|${venueIds.slice().sort().join(',')}|${quantityBased ? 1 : 0}|${optional ? 1 : 0}|${unit}|${price ?? ''}|${extraListType ?? ''}|${dropdownOptions.map(o => `${o.label}:${o.price}`).join(',')}|${extraExtresOptions.map(o => `${o.label}:${o.price}`).join(',')}|${thresholdMain ?? ''}|${thresholdFinal ?? ''}|${thresholdPriceBelow ?? ''}|${thresholdPriceAbove ?? ''}`;
     if (seen.has(signature)) return;
     seen.add(signature);
 
     const extra = {
       id,
-      label: String(label).trim(),
+      label: String(labels.ca).trim(),
+      labels,
       optional,
+      extraListCell: extrasListCell,
       year,
     };
 
@@ -318,11 +385,22 @@ function buildExtrasByVenue(rows) {
 
     if (dropdownOptions.length) {
       extra.dropdownOptions = dropdownOptions;
-      extra.extraType = extraType || 'desplegable';
+    }
+    if (extraExtresOptions.length) {
+      extra.extraExtresOptions = extraExtresOptions;
+    }
+    if (extraUnitPair) {
+      extra.extraUnitPair = extraUnitPair;
+      extra.hasExtraUnit = true;
+    }
+    if (wantsDropdown(extrasListCell) || extraListType.includes('despleg')) {
+      extra.extraType = 'desplegable';
+    } else if (extraListType.includes('llinda')) {
+      extra.extraType = 'llinda';
+    } else if (extraListType.includes('altres')) {
+      extra.extraType = 'altres-extres';
     } else if (hasThresholdData) {
       extra.extraType = 'llinda';
-    } else if (extraType) {
-      extra.extraType = extraType;
     }
     if (extra.extraType === 'llinda' || hasThresholdData) {
       if (thresholdMain !== null) extra.thresholdMain = thresholdMain;
@@ -574,160 +652,91 @@ const PRICE_CONFIG = {
   },
 };
 
-// ────────────────────────────────────────────────────────────────
-// 6. TRANSLATIONS
-// ────────────────────────────────────────────────────────────────
-
-const T = {
+const PDF_TEXT = {
   ca: {
-    exportBtn:       'Exportar PDF',
-    weddingDate:     'Data de la boda',
-    pending:         '— pendent —',
-    emptyState:      'Omple la finca, la data i el nombre de convidats per veure el pressupost en temps real.',
-    menuService:     'Menú i servei',
-    guestsX:         (n, ppp) => `${n} convidats × ${eur(ppp)}/pers. + IVA`,
-    minSupplement:   'Suplement mínim de convidats',
-    minDetail:       (short, min, pen) => `${short} pers. per sota el mínim (${min}) × ${eur(pen)}`,
-    mandatory:       'obligatori',
-    subtotal:        'Subtotal',
-    vat:             'IVA',
-    totalLabel:      'Total estimat',
-    perGuest:        pp => `${eur(pp)} per convidat`,
-    minWarn:         (min, pen) => `Per sota del mínim de ${min} convidats. S'aplica suplement de ${eur(pen)}/pers.`,
-    note:            'Pressupost orientatiu i no vinculant.',
-    // PDF
-    pdfTitle:            'Pressupost Estimat',
-    refLabel:            'Referència',
-    coupleLabel:         'La Parella',
-    dateLabel:           'Data de la Boda',
-    venueLabel:          'Finca',
-    guestsLabel:         'Convidats',
-    guestsUnit:          n => `${n} persones`,
-    detailLabel:         'Detall del Pressupost',
-    conceptCol:          'Concepte',
-    amountCol:           'Import',
-    pdfMenuDetail:       (n, ppp) => `${n} convidats × ${eur(ppp)}/pers.`,
-    pdfMinDetail:        (short, pen) => `${short} persones × ${eur(pen)}`,
-    pdfMandatory:        'obligatori',
-    footerNote:          'Pressupost orientatiu i no vinculant.',
-    locale:              'ca-ES',
-    months:              ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'],
-    supper:              'Ressopó',
-    staffmenu:           'Menú Staff',
-    childrenmenu:        'Menú infantil',
-    essentialQuota:      'Quota serveis essencials',
-    ceremony:            'Cerimònia',
-    bridalsuite:         'La Suite',
-    banquetexterior:     'Banquet a l\'exterior',
-    accommodation:       'Allotjament',
-    gardenaperitif:      'Aperitiu al jardí',
-    espatllaibericacebo: 'Espatlla ibèrica de cebo',
-    espatllaibericagla:  'Espatlla ibèrica de gla 5J',
-    pernilibericcebo:    'Pernil ibèric de cebo',
-    pernilibericgla:     'Pernil ibèric de gla 5J',
-    pernil:              'Pernil amb pa amb tomàquet',
+    pdfTitle: 'Pressupost Estimat',
+    refLabel: 'Referència',
+    coupleLabel: 'La Parella',
+    dateLabel: 'Data de la Boda',
+    venueLabel: 'Finca',
+    guestsLabel: 'Convidats',
+    guestsUnit: n => `${n} persones`,
+    detailLabel: 'Detall del Pressupost',
+    conceptCol: 'Concepte',
+    amountCol: 'Import',
+    subtotal: 'Subtotal',
+    vat: 'IVA',
+    totalLabel: 'Total estimat',
+    perGuest: pp => `${eur(pp)} per convidat`,
+    footerNote: 'Pressupost orientatiu i no vinculant.',
+    mandatory: 'obligatori',
+    menuService: 'Menú i servei',
+    minSupplement: 'Suplement mínim de convidats',
+    dateFormat: (d, months) => `${d.getDate()} de ${months[d.getMonth()]} de ${d.getFullYear()}`,
+    menuDetail: (n, ppp) => `${n} convidats × ${eur(ppp)}/pers. + IVA`,
+    minDetail: (short, min, pen) => `${short} pers. per sota el mínim (${min}) × ${eur(pen)}`,
+    pdfMenuDetail: (n, ppp) => `${n} convidats × ${eur(ppp)}/pers.`,
+    pdfMinDetail: (short, pen) => `${short} persones × ${eur(pen)}`,
+    emptyState: 'Omple la finca, la data i el nombre de convidats per veure el pressupost en temps real.',
+    months: MONTHS_CA,
   },
   es: {
-    exportBtn:       'Exportar PDF',
-    weddingDate:     'Fecha de la boda',
-    pending:         '— pendiente —',
-    emptyState:      'Rellena la finca, la fecha y el número de invitados para ver el presupuesto en tiempo real.',
-    menuService:     'Menú y servicio',
-    guestsX:         (n, ppp) => `${n} invitados × ${eur(ppp)}/pers. + IVA`,
-    minSupplement:   'Suplemento mínimo de invitados',
-    minDetail:       (short, min, pen) => `${short} pers. por debajo del mínimo (${min}) × ${eur(pen)}`,
-    mandatory:       'obligatorio',
-    subtotal:        'Subtotal',
-    vat:             'IVA',
-    totalLabel:      'Total estimado',
-    perGuest:        pp => `${eur(pp)} por invitado`,
-    minWarn:         (min, pen) => `Por debajo del mínimo de ${min} invitados. Se aplica suplemento de ${eur(pen)}/pers.`,
-    note:            'Presupuesto orientativo y no vinculante.',
-    // PDF
-    pdfTitle:            'Presupuesto Estimado',
-    refLabel:            'Referencia',
-    coupleLabel:         'La Pareja',
-    dateLabel:           'Fecha de la Boda',
-    venueLabel:          'Finca',
-    guestsLabel:         'Invitados',
-    guestsUnit:          n => `${n} personas`,
-    detailLabel:         'Detalle del Presupuesto',
-    conceptCol:          'Concepto',
-    amountCol:           'Importe',
-    pdfMenuDetail:       (n, ppp) => `${n} invitados × ${eur(ppp)}/pers.`,
-    pdfMinDetail:        (short, pen) => `${short} personas × ${eur(pen)}`,
-    pdfMandatory:        'obligatorio',
-    footerNote:          'Presupuesto orientativo y no vinculante.',
-    locale:              'es-ES',
-    months:              ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
-    supper:              'Resopó',
-    staffmenu:           'Menú Staff',
-    childrenmenu:        'Menú infantil',
-    essentialQuota:      'Cuota servicios esenciales',
-    ceremony:            'Cerimonia',
-    bridalsuite:         'La Suite',
-    banquetexterior:     'Banquete al exterior',
-    accommodation:       'Alojamiento',
-    gardenaperitif:      'Aperitiu al jardí',
-    espatllaibericacebo: 'Paletilla ibérica de cebo',
-    espatllaibericagla:  'Paletilla ibérica de bellotaj 5J',
-    pernilibericcebo:    'Jamón ibérico de cebo',
-    pernilibericgla:     'Jamón ibérico 5J de bellota',
-    pernil:              'Jamón con pan con tomate',
+    pdfTitle: 'Presupuesto Estimado',
+    refLabel: 'Referencia',
+    coupleLabel: 'La Pareja',
+    dateLabel: 'Fecha de la Boda',
+    venueLabel: 'Finca',
+    guestsLabel: 'Invitados',
+    guestsUnit: n => `${n} personas`,
+    detailLabel: 'Detalle del Presupuesto',
+    conceptCol: 'Concepto',
+    amountCol: 'Importe',
+    subtotal: 'Subtotal',
+    vat: 'IVA',
+    totalLabel: 'Total estimado',
+    perGuest: pp => `${eur(pp)} por invitado`,
+    footerNote: 'Presupuesto orientativo y no vinculante.',
+    mandatory: 'obligatorio',
+    menuService: 'Menú y servicio',
+    minSupplement: 'Suplemento mínimo de invitados',
+    dateFormat: (d, months) => `${d.getDate()} de ${months[d.getMonth()]} de ${d.getFullYear()}`,
+    menuDetail: (n, ppp) => `${n} invitados × ${eur(ppp)}/pers. + IVA`,
+    minDetail: (short, min, pen) => `${short} pers. por debajo del mínimo (${min}) × ${eur(pen)}`,
+    pdfMenuDetail: (n, ppp) => `${n} invitados × ${eur(ppp)}/pers.`,
+    pdfMinDetail: (short, pen) => `${short} personas × ${eur(pen)}`,
+    emptyState: 'Rellena la finca, la fecha y el número de invitados para ver el presupuesto en tiempo real.',
+    months: ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],
   },
   en: {
-    exportBtn:       'Export PDF',
-    weddingDate:     'Wedding date',
-    pending:         '— pending —',
-    emptyState:      'Fill in the venue, date and number of guests to see the live estimate.',
-    menuService:     'Menu & service',
-    guestsX:         (n, ppp) => `${n} guests × ${eur(ppp)}/person + VAT`,
-    minSupplement:   'Minimum guests supplement',
-    minDetail:       (short, min, pen) => `${short} persons below minimum (${min}) × ${eur(pen)}`,
-    mandatory:       'mandatory',
-    subtotal:        'Subtotal',
-    vat:             'VAT',
-    totalLabel:      'Estimated total',
-    perGuest:        pp => `${eur(pp)} per guest`,
-    minWarn:         (min, pen) => `Below minimum of ${min} guests. A supplement of ${eur(pen)}/person applies.`,
-    note:            'Indicative and non-binding estimate.',
-    // PDF
-    pdfTitle:            'Estimated Budget',
-    refLabel:            'Reference',
-    coupleLabel:         'The Couple',
-    dateLabel:           'Wedding Date',
-    venueLabel:          'Venue',
-    guestsLabel:         'Guests',
-    guestsUnit:          n => `${n} people`,
-    detailLabel:         'Budget Details',
-    conceptCol:          'Item',
-    amountCol:           'Amount',
-    pdfMenuDetail:       (n, ppp) => `${n} guests × ${eur(ppp)}/person`,
-    pdfMinDetail:        (short, pen) => `${short} persons × ${eur(pen)}`,
-    pdfMandatory:        'mandatory',
-    footerNote:          'Indicative and non-binding estimate.',
-    locale:              'en-GB',
-    months:              ['January','February','March','April','May','June','July','August','September','October','November','December'],
-    supper:              'Late night snack',
-    staffmenu:           'Staff menu',
-    childrenmenu:        'Children menu',
-    essentialQuota:      'Essential services fee',
-    ceremony:            'Ceremony',
-    bridalsuite:         'The Suite',
-    banquetexterior:     'Outdoor banquet',
-    accommodation:       'Accommodation',
-    gardenaperitif:      'Garden Aperitif',
-    gardenaperitif:      'Aperitiu al jardí',
-    espatllaibericacebo: 'Iberian shoulder ham',
-    espatllaibericagla:  '5J Iberian shoulder ham',
-    pernilibericcebo:    'Iberian ham',
-    pernilibericgla:     '5J Iberian ham',
-    pernil:              'Ham with tomato bread',
+    pdfTitle: 'Estimated Budget',
+    refLabel: 'Reference',
+    coupleLabel: 'The Couple',
+    dateLabel: 'Wedding Date',
+    venueLabel: 'Venue',
+    guestsLabel: 'Guests',
+    guestsUnit: n => `${n} people`,
+    detailLabel: 'Budget Details',
+    conceptCol: 'Item',
+    amountCol: 'Amount',
+    subtotal: 'Subtotal',
+    vat: 'VAT',
+    totalLabel: 'Estimated total',
+    perGuest: pp => `${eur(pp)} per guest`,
+    footerNote: 'Indicative and non-binding estimate.',
+    mandatory: 'mandatory',
+    menuService: 'Menu & service',
+    minSupplement: 'Minimum guests supplement',
+    dateFormat: (d, months) => `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`,
+    menuDetail: (n, ppp) => `${n} guests × ${eur(ppp)}/person + VAT`,
+    minDetail: (short, min, pen) => `${short} persons below minimum (${min}) × ${eur(pen)}`,
+    pdfMenuDetail: (n, ppp) => `${n} guests × ${eur(ppp)}/person`,
+    pdfMinDetail: (short, pen) => `${short} persons × ${eur(pen)}`,
+    emptyState: 'Fill in the venue, date and number of guests to see the live estimate.',
+    months: ['January','February','March','April','May','June','July','August','September','October','November','December'],
   },
 };
-
 // ────────────────────────────────────────────────────────────────
-// 7. BUSINESS LOGIC & CALCULATION FUNCTIONS
+// 6. BUSINESS LOGIC & CALCULATION FUNCTIONS
 // ────────────────────────────────────────────────────────────────
 
 function lookupPrice(venueId, year, month, dow) {
@@ -772,7 +781,11 @@ window.__uauuDataReady = loadExtrasFromSpreadsheet()
     return {};
   });
 
-function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantities, extraOptions = {}, extraVariants = {} }) {
+function getExtraLabel(extra, lang = 'ca') {
+  return String(extra?.labels?.[lang] || extra?.labels?.ca || extra?.label || '').trim();
+}
+
+function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantities, extraOptions = {}, extraVariants = {}, lang = 'ca' }) {
   if (!venue || !date || guests < 1) return null;
   const d = new Date(date + 'T12:00:00');
   const year = d.getFullYear(), month = d.getMonth() + 1, dow = d.getDay();
@@ -805,14 +818,14 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
     let currentPrice = e.price || 0;
     let variantSuffix = "";
     const extraOpts = options[e.id] || {};
-    const hasDropdownOptions = Array.isArray(e.dropdownOptions) && e.dropdownOptions.length > 0;
+    const hasDropdownOptions = Array.isArray(e.dropdownOptions) && e.dropdownOptions.length > 0 && (e.extraType === 'desplegable' || wantsDropdown(e.extraListCell));
     const selectedDropdown = hasDropdownOptions
       ? e.dropdownOptions.find(opt => opt.id === extraOpts.dropdownSelection) || e.dropdownOptions[0]
       : null;
 
     if (selectedDropdown) {
       currentPrice = selectedDropdown.price;
-      variantSuffix = ` (${selectedDropdown.label})`;
+      variantSuffix = ` (${getOptionLabel(selectedDropdown, lang)})`;
     }
 
     if (e.variants && extraVariants && extraVariants[e.id]) {
@@ -851,10 +864,19 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
       priceDetail = quantity > 0
         ? `${eur(currentPrice)} base + ${quantity} extres extra × ${eur(e.extraPackPrice || 0)}`
         : `${eur(currentPrice)} base`;
+    } else if (e.extraExtresOptions && e.extraExtresOptions.length) {
+      const selectedIndex = Math.max(0, Math.min(e.extraExtresOptions.length - 1, Number(extraOpts.extraSelection ?? 0) || 0));
+      const extraItem = e.extraExtresOptions[selectedIndex];
+      currentPrice = extraItem.price;
+      const extraLabel = extraItem.labels?.[lang] || extraItem.labels?.ca || extraItem.label;
+      priceDetail = `${getExtraLabel(e, lang)} · ${extraLabel}`;
     } else if (e.quantityBased) {
-      computedPrice = quantity * currentPrice;
+      const extraUnitQty = Math.max(0, Math.round(Number(extraOpts.extraUnitQty ?? 0)));
+      const extraUnitPrice = Number(e.extraUnitPair?.price ?? 0);
+      computedPrice = (quantity * currentPrice) + (extraUnitQty * extraUnitPrice);
       const unitLabel = e.unit === 'person' ? 'persones' : e.unit === 'pack' ? 'packs' : 'unitats';
-      priceDetail = `${quantity} ${unitLabel}${variantSuffix} × ${eur(currentPrice)}`;
+      const extraUnitLabel = e.extraUnitPair?.label ? ` + ${extraUnitQty} ${e.extraUnitPair.label} × ${eur(extraUnitPrice)}` : '';
+      priceDetail = `${quantity} ${unitLabel}${variantSuffix} × ${eur(currentPrice)}${extraUnitLabel}`;
     } else if (e.extraType === 'llinda' || e.thresholdMain !== undefined || e.thresholdFinal !== undefined) {
       const thresholdMain = Number(e.thresholdMain);
       const thresholdFinal = Number(e.thresholdFinal);
@@ -898,29 +920,13 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
     year, month, dow, usedYear: slot.year,
     pricePerPerson: slot.price, minGuests: slot.minGuests,
     menuBase, shortfall, penaltyAmt,
-    extrasLines, extrasTotal, subtotal, vat, total,
+    extrasLines: extrasLines.map(e => ({ ...e, label: getExtraLabel(e, lang) })),
+    extrasTotal, subtotal, vat, total,
     perPerson: total / guests,
   };
 }
 
-function getExtraLabel(extraId, variantIdOrLang, maybeLang) {
-  const lang = maybeLang ?? variantIdOrLang;
-  const idToKey = {
-    'ressopo': 'supper',
-    'staffmenu': 'staffmenu',
-    'childrenmenu': 'childrenmenu',
-    'essential-services': 'essentialQuota',
-    'ceremony': 'ceremony',
-    'bridalsuite': 'bridalsuite',
-    'banquetexterior': 'banquetexterior',
-    'accommodation': 'accommodation',
-    'gardenaperitif': 'gardenaperitif',
-    'espatllaibericacebo': 'espatllaibericacebo',
-    'espatllaibericagla': 'espatllaibericagla',
-    'pernilibericcebo': 'pernilibericcebo',
-    'pernilibericgla': 'pernilibericgla',
-    'pernil': 'pernil',
-  };
-  const key = idToKey[extraId];
-  return key ? T[lang]?.[key] : null;
-}
+
+
+
+
