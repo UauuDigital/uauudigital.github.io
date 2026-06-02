@@ -877,7 +877,17 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
       const unitLabel = e.unit === 'person' ? 'persones' : e.unit === 'pack' ? 'packs' : 'unitats';
       const extraUnitLabel = e.extraUnitPair?.label ? ` + ${extraUnitQty} ${e.extraUnitPair.label} × ${eur(extraUnitPrice)}` : '';
       priceDetail = `${quantity} ${unitLabel}${variantSuffix} × ${eur(currentPrice)}${extraUnitLabel}`;
-    } else if (e.extraType === 'llinda' || e.thresholdMain !== undefined || e.thresholdFinal !== undefined) {
+    } else if (e.pricingFn) {
+      computedPrice = e.pricingFn(guests) || 0;
+      priceDetail = e.pricingFnDetail ? e.pricingFnDetail(guests) : null;
+    } else if (e.pricePerPerson) {
+      computedPrice = Math.max(guests * e.pricePerPerson, e.minPrice || 0);
+      priceDetail = `${guests} pers. × ${eur(e.pricePerPerson)} (mínim ${eur(e.minPrice)})`;
+    } else {
+      computedPrice = currentPrice;
+    }
+
+    if (e.extraType === 'llinda' || e.thresholdMain !== undefined || e.thresholdFinal !== undefined) {
       const thresholdMain = Number(e.thresholdMain);
       const thresholdFinal = Number(e.thresholdFinal);
       const thresholdPriceBelow = Number(e.thresholdPriceBelow ?? currentPrice ?? 0);
@@ -886,26 +896,14 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
       const hasFinal = Number.isFinite(thresholdFinal);
 
       if (hasMain && guests < thresholdMain) {
-        // For the lower bracket, always force the fixed "x<0" price.
         computedPrice = Number.isFinite(thresholdPriceBelow) ? thresholdPriceBelow : 0;
         priceDetail = `Fixe (< ${thresholdMain} convidats)`;
       } else if (hasFinal && guests > thresholdFinal) {
         const diffGuests = guests - thresholdFinal;
-        computedPrice = currentPrice + (diffGuests * thresholdPriceAbove);
-        priceDetail = `${eur(currentPrice)} + (${diffGuests} × ${eur(thresholdPriceAbove)})`;
-      } else {
-        computedPrice = currentPrice;
+        const basePrice = Number(e.price ?? currentPrice ?? 0);
+        computedPrice = basePrice + (diffGuests * thresholdPriceAbove);
+        priceDetail = `${eur(basePrice)} + (${diffGuests} × ${eur(thresholdPriceAbove)})`;
       }
-    } else if (e.pricingFn) {
-      computedPrice = e.pricingFn(guests) || 0;
-      priceDetail = e.pricingFnDetail ? e.pricingFnDetail(guests) : null;
-    } 
-    else if (e.pricePerPerson) {
-      computedPrice = Math.max(guests * e.pricePerPerson, e.minPrice || 0);
-      priceDetail = `${guests} pers. × ${eur(e.pricePerPerson)} (mínim ${eur(e.minPrice)})`;
-    } 
-    else {
-      computedPrice = currentPrice;
     }
     
   return { ...e, isMandatory, condMandatory, included: included && hasQuantity, computedPrice, priceDetail };
