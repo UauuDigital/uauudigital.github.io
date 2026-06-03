@@ -875,8 +875,13 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
       const extraUnitPrice = Number(e.extraUnitPair?.price ?? 0);
       computedPrice = (quantity * currentPrice) + (extraUnitQty * extraUnitPrice);
       const unitLabel = e.unit === 'person' ? 'persones' : e.unit === 'pack' ? 'packs' : 'unitats';
-      const extraUnitLabel = e.extraUnitPair?.label ? ` + ${extraUnitQty} ${e.extraUnitPair.label} × ${eur(extraUnitPrice)}` : '';
+      const extraUnitLabel = e.extraUnitPair ? ` + ${extraUnitQty} ${e.extraUnitPair.label} × ${eur(extraUnitPrice)}` : '';
       priceDetail = `${quantity} ${unitLabel}${variantSuffix} × ${eur(currentPrice)}${extraUnitLabel}`;
+    } else if (e.extraUnitPair) {
+      const extraUnitQty = Math.max(0, Math.round(Number(extraOpts.extraUnitQty ?? 0)));
+      const extraUnitPrice = Number(e.extraUnitPair.price ?? 0);
+      computedPrice = currentPrice + (extraUnitQty * extraUnitPrice);
+      priceDetail = `${eur(currentPrice)}${extraUnitQty > 0 ? ` + ${extraUnitQty} ${e.extraUnitPair.label} × ${eur(extraUnitPrice)}` : ''}`;
     } else if (e.pricingFn) {
       computedPrice = e.pricingFn(guests) || 0;
       priceDetail = e.pricingFnDetail ? e.pricingFnDetail(guests) : null;

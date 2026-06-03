@@ -163,7 +163,9 @@
         const isMandatory = !e.optional || condMandatory;
         const isSelected = isExtraSelected(e);
         const canDeactivate = e.optional && !isMandatory;
-        const quantity = e.quantityBased ? (extraQuantities?.[e.id] ?? 0) : null;
+        const hasQuantityInput = e.quantityBased;
+        const hasExtraUnitInput = !!e.extraUnitPair;
+        const quantity = hasQuantityInput ? (extraQuantities?.[e.id] ?? 0) : null;
         const opts = extraOptions?.[e.id] || {};
         const isCookieBar = e.id === 'cookiebar';
         const isBarLliure = e.id === 'barlliure';
@@ -208,7 +210,7 @@
           ? `${eur(currentPrice)} base + ${eur(e.extraPackPrice || 0)}/extra + IVA`
           : isBarLliure
             ? `2h incloses`
-            : e.quantityBased
+            : hasQuantityInput
               ? `${eur(currentPrice)}/${quantityUnitLabel(e)} + IVA`
               : isLlinda
                 ? `${eur(currentPrice)} + IVA (llinda)`
@@ -243,7 +245,7 @@
                 )}
               </div>
 
-              {e.variants && (e.quantityBased ? quantity > 0 : selectedExtras[e.id]) && (
+              {e.variants && (hasQuantityInput ? quantity > 0 : selectedExtras[e.id]) && (
                 <select
                   className="variant-select"
                   value={extraVariants?.[e.id] || e.variants[0].id}
@@ -315,24 +317,26 @@
                   </div>
                 )}
               </div>
-            ) : e.quantityBased ? (
+            ) : hasQuantityInput || hasExtraUnitInput ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div className="extra-quantity">
-                  <input
-                    className="extra-quantity-input"
-                    type="number"
-                    min={0}
-                    step={1}
-                    inputMode="numeric"
-                    placeholder="0"
-                    value={quantity}
-                    onChange={ev => onQuantityChange(e.id, normalizeQuantity(ev.target.value))}
-                    aria-label={quantityInputLabel(e)}
-                    title={quantityInputLabel(e)}
-                  />
-                  <span className="extra-quantity-unit">{quantityUnitLabel(e)}</span>
-                </div>
-                {e.extraUnitPair && (
+                {hasQuantityInput && (
+                  <div className="extra-quantity">
+                    <input
+                      className="extra-quantity-input"
+                      type="number"
+                      min={0}
+                      step={1}
+                      inputMode="numeric"
+                      placeholder="0"
+                      value={quantity}
+                      onChange={ev => onQuantityChange(e.id, normalizeQuantity(ev.target.value))}
+                      aria-label={quantityInputLabel(e)}
+                      title={quantityInputLabel(e)}
+                    />
+                    <span className="extra-quantity-unit">{quantityUnitLabel(e)}</span>
+                  </div>
+                )}
+                {hasExtraUnitInput && (
                   <div className="extra-quantity">
                     <input
                       className="extra-quantity-input"
