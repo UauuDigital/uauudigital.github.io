@@ -1,10 +1,16 @@
-function VenueCards({ value, onChange }) {
+function VenueCards({ value, onChange, compact = false }) {
   return (
-    <div className="venue-grid">
+    <div className={compact ? 'venue-grid venue-grid-compact' : 'venue-grid'}>
       {VENUES.map(v => (
-        <div key={v.id} className={`venue-card ${value === v.id ? 'selected' : ''}`} onClick={() => onChange(v.id)}>
+        <button
+          key={v.id}
+          type="button"
+          className={`venue-card ${value === v.id ? 'selected' : ''}`}
+          onClick={() => onChange(v.id)}
+          aria-pressed={value === v.id}
+        >
           <span className="venue-card-name">{v.name}</span>
-        </div>
+        </button>
       ))}
     </div>
   );

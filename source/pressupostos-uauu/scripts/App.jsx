@@ -16,6 +16,10 @@
     };
   });
   const [lang, setLang] = React.useState('ca');
+  const [showCompactVenues, setShowCompactVenues] = React.useState(false);
+  const [renderCompactVenues, setRenderCompactVenues] = React.useState(false);
+  const venueSectionRef = React.useRef(null);
+  const headerRef = React.useRef(null);
 
   function set(key, val) { setForm(f => ({ ...f, [key]: val })); }
   function setExtra(id, val) {
@@ -56,9 +60,40 @@
 
   const quote = React.useMemo(() => computeQuote({ ...form, lang }), [form, lang]);
 
+  React.useEffect(() => {
+    if (showCompactVenues) {
+      setRenderCompactVenues(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setRenderCompactVenues(false), 220);
+    return () => window.clearTimeout(timer);
+  }, [showCompactVenues]);
+
+  React.useEffect(() => {
+    function updateCompactVenues() {
+      const section = venueSectionRef.current;
+      const header = headerRef.current;
+      if (!section || !header) return;
+
+      const headerRect = header.getBoundingClientRect();
+      const sectionRect = section.getBoundingClientRect();
+      const scrolledEnough = window.scrollY > 700;
+      const mainVenuesHidden = sectionRect.top < headerRect.bottom;
+      setShowCompactVenues(scrolledEnough && mainVenuesHidden);
+    }
+
+    updateCompactVenues();
+    window.addEventListener('scroll', updateCompactVenues, { passive: true });
+    window.addEventListener('resize', updateCompactVenues);
+    return () => {
+      window.removeEventListener('scroll', updateCompactVenues);
+      window.removeEventListener('resize', updateCompactVenues);
+    };
+  }, []);
+
   return (
     <div>
-      <header className="page-header">
+      <header className="page-header" ref={headerRef}>
         <div className="page-header-side page-header-left">
           <img
             className="page-logo"
@@ -82,11 +117,17 @@
             ))}
           </div>
         </div>
-        <div className="page-header-side page-header-right" aria-hidden="true" />
+        <div className="page-header-side page-header-right">
+          {renderCompactVenues && (
+            <div className={`page-header-venues page-header-venues-right ${showCompactVenues ? 'is-visible' : 'is-hiding'}`}>
+              <VenueCards value={form.venue} onChange={v => set('venue', v)} compact />
+            </div>
+          )}
+        </div>
       </header>
 
       <div className="app-body">
-        <div className="form-panel">
+        <div className="form-panel" ref={venueSectionRef}>
           <div className="form-section">
             <div className="section-title">Finca de la boda</div>
             <VenueCards value={form.venue} onChange={v => set('venue', v)} />
