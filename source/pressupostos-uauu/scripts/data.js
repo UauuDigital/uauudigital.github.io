@@ -200,12 +200,61 @@ function parseExtraUnitValue(row) {
 }
 
 function parseExtraExtresValue(row) {
-  const raw = String(pickColumn(row, SPREADSHEET_COLUMNS.extraExtresKind) ?? '').trim();
-  const sw = String(pickColumn(row, SPREADSHEET_COLUMNS.extraSwitch) ?? '').trim();
+  const rawValue = pickColumn(row, SPREADSHEET_COLUMNS.extraExtresKind);
+  const swValue =
+    pickColumn(row, SPREADSHEET_COLUMNS.extraSwitch) ??
+    pickColumnLoose(row, ['switch']) ??
+    '';
+  const isUsefulText = (value) => {
+    const txt = String(value ?? '').trim();
+    return !!txt && txt !== 'true' && txt !== 'false';
+  };
+  const splitTokens = (text) => String(text ?? '').trim().split(/[,\n;|]+/).map(s => s.trim()).filter(Boolean);
+  const findSwitchText = () => {
+    const directCandidates = [swValue, rawValue]
+      .filter(isUsefulText)
+      .map(v => String(v).trim());
+    for (const candidate of directCandidates) {
+      if (candidate.includes(',') && splitTokens(candidate).length >= 4) return candidate;
+    }
+    for (const key of Object.keys(row || {})) {
+      const normalizedKey = normText(key);
+      if (!normalizedKey.includes('switch') && !normalizedKey.includes('extra')) continue;
+      const value = row[key];
+      if (!isUsefulText(value)) continue;
+      const candidate = String(value).trim();
+      if (candidate.includes(',') && splitTokens(candidate).length >= 4) return candidate;
+    }
+    return '';
+  };
+  const raw = String(rawValue ?? '').trim();
+  const sw = findSwitchText();
+  const parseSwitch = (text) => {
+    const rawText = String(text ?? '').trim();
+    if (!rawText) return [];
+    const tokens = splitTokens(rawText);
+    if (tokens.length < 4) return [];
+    const leftLabel = tokens[0];
+    const leftPrice = parseMoney(tokens[1]);
+    const rightLabel = tokens[2];
+    const rightPrice = parseMoney(tokens[3]);
+    if (!leftLabel || !rightLabel) return [];
+    return [{
+      id: `${buildServiceId(leftLabel, 0)}-${buildServiceId(rightLabel, 1)}-switch`,
+      labels: { ca: leftLabel, es: leftLabel, en: leftLabel },
+      label: leftLabel,
+      leftLabel,
+      leftPrice: leftPrice ?? 0,
+      rightLabel,
+      rightPrice: rightPrice ?? 0,
+      defaultSide: 'right',
+      switchMode: true,
+    }];
+  };
   const parsePairs = (text) => {
     const rawText = String(text ?? '').trim();
     if (!rawText) return [];
-    const tokens = rawText.split(',').map(s => s.trim()).filter(Boolean);
+    const tokens = splitTokens(rawText);
     const out = [];
     for (let i = 0; i + 1 < tokens.length; i += 2) {
       const ca = tokens[i];
@@ -215,7 +264,7 @@ function parseExtraExtresValue(row) {
     }
     return out;
   };
-  return [...parsePairs(raw), ...parsePairs(sw)];
+  return [...parsePairs(raw), ...parseSwitch(sw)];
 }
 
 function pickColumn(row, keys) {
@@ -357,7 +406,7 @@ function buildExtrasByVenue(rows) {
     const unit = parseUnitStyle(unitCell);
     const dropdownOptions = parseJsonOptions(dropdownCell);
     const extraListType = normText(extrasListCell);
-    const extraExtresOptions = parseExtraExtresValue(row);
+  const extraExtresOptions = parseExtraExtresValue(row);
     const extraUnitPair = parseNamePricePair(parseExtraUnitValue(row));
     const thresholdMain = parseMoney(thresholdMainCell);
     const thresholdFinal = parseMoney(thresholdFinalCell);
@@ -865,11 +914,26 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
         ? `${eur(currentPrice)} base + ${quantity} extres extra × ${eur(e.extraPackPrice || 0)}`
         : `${eur(currentPrice)} base`;
     } else if (e.extraExtresOptions && e.extraExtresOptions.length) {
-      const selectedIndex = Math.max(0, Math.min(e.extraExtresOptions.length - 1, Number(extraOpts.extraSelection ?? 0) || 0));
-      const extraItem = e.extraExtresOptions[selectedIndex];
-      currentPrice = extraItem.price;
-      const extraLabel = extraItem.labels?.[lang] || extraItem.labels?.ca || extraItem.label;
-      priceDetail = `${getExtraLabel(e, lang)} · ${extraLabel}`;
+      if (selectedExtras[e.id] !== true && !isMandatory) {
+        computedPrice = 0;
+        priceDetail = null;
+      } else {
+        const extraItem = e.extraExtresOptions.find(opt => opt && opt.switchMode) || e.extraExtresOptions[0];
+        const rawSelection = String(extraOpts.extraSelection ?? extraOpts.switchSide ?? '').trim().toLowerCase();
+        const selectedSide = rawSelection === 'left' || rawSelection === 'esquerra' || rawSelection === 'a' || rawSelection === '0'
+          ? 'left'
+          : rawSelection === 'right' || rawSelection === 'dreta' || rawSelection === 'b' || rawSelection === '1'
+            ? 'right'
+            : (extraItem.defaultSide || 'right');
+        const switchPrice = selectedSide === 'left'
+          ? Number(extraItem.leftPrice ?? 0)
+          : Number(extraItem.rightPrice ?? 0);
+        currentPrice = switchPrice;
+        const leftLabel = extraItem.leftLabel || extraItem.label;
+        const rightLabel = extraItem.rightLabel || extraItem.label;
+        const currentLabel = selectedSide === 'left' ? leftLabel : rightLabel;
+        priceDetail = `${getExtraLabel(e, lang)} · ${leftLabel} / ${rightLabel} (${currentLabel})`;
+      }
     } else if (e.quantityBased) {
       const extraUnitQty = Math.max(0, Math.round(Number(extraOpts.extraUnitQty ?? 0)));
       const extraUnitPrice = Number(e.extraUnitPair?.price ?? 0);

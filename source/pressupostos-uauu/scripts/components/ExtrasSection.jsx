@@ -12,10 +12,11 @@
   onOptionChange,
   onVariantChange,
 }) {
-  if (!venueId || !year) return null;
-  const extras = getExtras(venueId, year).filter(e => !['menu-staff', 'menu-infantil'].includes(e.id));
-  if (!extras.length) return null;
   const [optionalSelection, setOptionalSelection] = React.useState('');
+  const extras = React.useMemo(
+    () => (venueId && year ? getExtras(venueId, year).filter(e => !['menu-staff', 'menu-infantil'].includes(e.id)) : []),
+    [venueId, year]
+  );
 
   function quantityUnitLabel(extra) {
     if (extra.unit === 'person') return 'persones';
@@ -44,6 +45,7 @@
       return { extra: e, baseLabel, displayLabel, condMandatory };
     });
   }, [optionalExtras, dow, month]);
+  if (!venueId || !year || !extras.length) return null;
 
   function parseOptionalSelectionValue(value) {
     const raw = String(value || '').trim();
@@ -169,9 +171,18 @@
         const opts = extraOptions?.[e.id] || {};
         const isCookieBar = e.id === 'cookiebar';
         const isBarLliure = e.id === 'barlliure';
+        const switchOption = Array.isArray(e.extraExtresOptions)
+          ? e.extraExtresOptions.find(opt => opt && opt.switchMode)
+          : null;
+        const hasSwitchOptions = !!switchOption;
         const hasDropdownOptions = e.extraType === 'desplegable' && Array.isArray(e.dropdownOptions) && e.dropdownOptions.length > 0;
         const selectedDropdownOption = hasDropdownOptions
           ? e.dropdownOptions.find(opt => opt.id === opts.dropdownSelection) || e.dropdownOptions[0]
+          : null;
+        const rawSwitchSelection = String(opts.switchSide ?? opts.extraSelection ?? '').trim().toLowerCase();
+        const selectedSwitchSide = ['left', 'esquerra', 'a', '0'].includes(rawSwitchSelection) ? 'left' : 'right';
+        const switchCurrentPrice = hasSwitchOptions
+          ? (selectedSwitchSide === 'left' ? Number(switchOption.leftPrice ?? 0) : Number(switchOption.rightPrice ?? 0))
           : null;
 
         const basePrice = Number(e.price || 0);
@@ -210,6 +221,8 @@
           ? `${eur(currentPrice)} base + ${eur(e.extraPackPrice || 0)}/extra + IVA`
           : isBarLliure
             ? `2h incloses`
+            : hasSwitchOptions
+              ? `${eur(switchCurrentPrice)} + IVA`
             : hasQuantityInput
               ? `${eur(currentPrice)}/${quantityUnitLabel(e)} + IVA`
               : isLlinda
@@ -226,7 +239,31 @@
               <div className="extra-label">
                 {e.label}
                 {isMandatory && <span className="extra-badge badge-mandatory">{mandatoryLabel}</span>}
-                {hasDropdownOptions && (
+              </div>
+
+              {hasSwitchOptions && (
+                <div className="extra-switch" style={{ marginTop: '6px', maxWidth: '360px' }}>
+                  <div className="toggle-group extra-switch-group" style={{ width: '100%' }}>
+                    <button
+                      type="button"
+                      className={`toggle-btn extra-switch-btn ${selectedSwitchSide === 'left' ? 'active' : ''}`}
+                      onClick={() => onOptionChange(e.id, 'switchSide', 'left')}
+                    >
+                      {switchOption.leftLabel}
+                      <span className="extra-switch-price">{eur(switchOption.leftPrice)}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`toggle-btn extra-switch-btn ${selectedSwitchSide === 'right' ? 'active' : ''}`}
+                      onClick={() => onOptionChange(e.id, 'switchSide', 'right')}
+                    >
+                      {switchOption.rightLabel}
+                      <span className="extra-switch-price">{eur(switchOption.rightPrice)}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+              {hasDropdownOptions && (
                   <select
                     className="variant-select"
                     value={selectedDropdownOption?.id || ''}
@@ -242,8 +279,7 @@
                       </option>
                     ))}
                   </select>
-                )}
-              </div>
+              )}
 
               {e.variants && (hasQuantityInput ? quantity > 0 : selectedExtras[e.id]) && (
                 <select
