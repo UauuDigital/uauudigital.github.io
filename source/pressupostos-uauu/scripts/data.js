@@ -887,7 +887,7 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
       computedPrice = currentPrice;
     }
 
-    if (e.extraType === 'llinda' || e.thresholdMain !== undefined || e.thresholdFinal !== undefined) {
+    if (e.extraType === 'llinda') {
       const thresholdMain = Number(e.thresholdMain);
       const thresholdFinal = Number(e.thresholdFinal);
       const thresholdPriceBelow = Number(e.thresholdPriceBelow ?? currentPrice ?? 0);

@@ -175,7 +175,7 @@
         const basePrice = Number(e.price || 0);
         let currentPrice = basePrice;
         if (selectedDropdownOption) currentPrice = selectedDropdownOption.price;
-        const isLlinda = e.extraType === 'llinda' || e.thresholdMain !== undefined || e.thresholdFinal !== undefined;
+        const isLlinda = e.extraType === 'llinda';
         let llindaDetail = null;
         if (e.variants && extraVariants?.[e.id]) {
           const variant = e.variants.find(v => v.id === extraVariants[e.id]);
@@ -192,15 +192,15 @@
           const hasFinal = Number.isFinite(thresholdFinal);
           if (hasMain && guests < thresholdMain) {
             currentPrice = Number.isFinite(thresholdPriceBelow) ? thresholdPriceBelow : 0;
-            llindaDetail = `< ${thresholdMain}: preu fixe ${eur(currentPrice)}`;
+            llindaDetail = `Menys de ${thresholdMain}: ${eur(currentPrice)}`;
           } else if (hasFinal && guests > thresholdFinal) {
             const diffGuests = guests - thresholdFinal;
             currentPrice = basePrice + (diffGuests * thresholdPriceAbove);
-            llindaDetail = `${eur(basePrice)} + (${guests} - ${thresholdFinal}) × ${eur(thresholdPriceAbove)} = ${eur(currentPrice)}`;
+            llindaDetail = `Més de ${thresholdFinal}: ${eur(basePrice)} + ${eur(thresholdPriceAbove)}/conv.`;
           } else if (hasMain && hasFinal) {
-            llindaDetail = `${thresholdMain} <= ${guests} <= ${thresholdFinal}: preu base ${eur(e.price || 0)}`;
+            llindaDetail = `${thresholdMain}-${thresholdFinal}: ${eur(e.price || 0)}`;
           } else if (!hasMain && hasFinal) {
-            llindaDetail = `Revisar columna llinda principi (no detectada). Llinda final: ${thresholdFinal}`;
+            llindaDetail = `Fins a ${thresholdFinal}: segons convidats`;
           }
         }
 
