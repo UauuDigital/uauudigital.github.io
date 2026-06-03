@@ -236,33 +236,32 @@
         return (
           <div key={e.id} className="extra-item">
             <div className="extra-info">
-              <div className="extra-label">
+              <div className="extra-label extra-label-row">
                 {e.label}
                 {isMandatory && <span className="extra-badge badge-mandatory">{mandatoryLabel}</span>}
-              </div>
-
-              {hasSwitchOptions && (
-                <div className="extra-switch" style={{ marginTop: '6px', maxWidth: '360px' }}>
-                  <div className="toggle-group extra-switch-group" style={{ width: '100%' }}>
-                    <button
-                      type="button"
-                      className={`toggle-btn extra-switch-btn ${selectedSwitchSide === 'left' ? 'active' : ''}`}
-                      onClick={() => onOptionChange(e.id, 'switchSide', 'left')}
-                    >
-                      {switchOption.leftLabel}
-                      <span className="extra-switch-price">{eur(switchOption.leftPrice)}</span>
-                    </button>
-                    <button
-                      type="button"
-                      className={`toggle-btn extra-switch-btn ${selectedSwitchSide === 'right' ? 'active' : ''}`}
-                      onClick={() => onOptionChange(e.id, 'switchSide', 'right')}
-                    >
-                      {switchOption.rightLabel}
-                      <span className="extra-switch-price">{eur(switchOption.rightPrice)}</span>
-                    </button>
+                {hasSwitchOptions && (
+                  <div className="extra-switch" style={{ marginLeft: '10px', maxWidth: '360px' }}>
+                    <div className="toggle-group extra-switch-group" style={{ width: '100%' }}>
+                      <button
+                        type="button"
+                        className={`toggle-btn extra-switch-btn ${selectedSwitchSide === 'left' ? 'active' : ''}`}
+                        onClick={() => onOptionChange(e.id, 'switchSide', 'left')}
+                      >
+                        {switchOption.leftLabel}
+                        <span className="extra-switch-price">{eur(switchOption.leftPrice)}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`toggle-btn extra-switch-btn ${selectedSwitchSide === 'right' ? 'active' : ''}`}
+                        onClick={() => onOptionChange(e.id, 'switchSide', 'right')}
+                      >
+                        {switchOption.rightLabel}
+                        <span className="extra-switch-price">{eur(switchOption.rightPrice)}</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
               {hasDropdownOptions && (
                   <select
                     className="variant-select"
@@ -391,7 +390,7 @@
                 )}
               </div>
             ) : isMandatory ? (
-              <div style={{ fontSize: 12, fontFamily: 'var(--font-sans)', letterSpacing: '0.1em', color: 'var(--color-muted)', textTransform: 'uppercase', marginLeft: 16 }}>Inclòs</div>
+              <div />
             ) : (
               <div />
             )}

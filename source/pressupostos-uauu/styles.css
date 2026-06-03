@@ -484,6 +484,13 @@ input[type="range"]::-webkit-slider-thumb {
   color: var(--color-ink);
 }
 
+.extra-label-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .extra-price {
   font-family: var(--font-serif);
   font-size: 14px;
@@ -523,6 +530,7 @@ input[type="range"]::-webkit-slider-thumb {
   display: inline-flex;
   width: 100%;
   max-width: 360px;
+  vertical-align: middle;
 }
 
 .extra-switch-btn {

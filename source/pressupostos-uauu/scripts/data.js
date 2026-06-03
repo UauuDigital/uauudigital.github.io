@@ -932,7 +932,8 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
         const leftLabel = extraItem.leftLabel || extraItem.label;
         const rightLabel = extraItem.rightLabel || extraItem.label;
         const currentLabel = selectedSide === 'left' ? leftLabel : rightLabel;
-        priceDetail = `${getExtraLabel(e, lang)} · ${leftLabel} / ${rightLabel} (${currentLabel})`;
+        computedPrice = currentPrice;
+        priceDetail = currentLabel;
       }
     } else if (e.quantityBased) {
       const extraUnitQty = Math.max(0, Math.round(Number(extraOpts.extraUnitQty ?? 0)));
