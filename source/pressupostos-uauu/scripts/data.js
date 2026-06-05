@@ -233,20 +233,55 @@ function parseExtraExtresValue(row) {
     const rawText = String(text ?? '').trim();
     if (!rawText) return [];
     const tokens = splitTokens(rawText);
-    if (tokens.length < 4) return [];
-    const leftLabel = tokens[0];
-    const leftPrice = parseMoney(tokens[1]);
-    const rightLabel = tokens[2];
-    const rightPrice = parseMoney(tokens[3]);
-    if (!leftLabel || !rightLabel) return [];
+    const parseSwitchBlock = (startIdx) => {
+      if (tokens.length - startIdx < 4) return null;
+      const maybePrice1 = parseMoney(tokens[startIdx + 1]);
+      const maybePrice2 = parseMoney(tokens[startIdx + 3]);
+      if (tokens.length - startIdx >= 8) {
+        const labels = {
+          ca: tokens[startIdx],
+          es: tokens[startIdx + 1],
+          en: tokens[startIdx + 2],
+        };
+        const leftPrice = parseMoney(tokens[startIdx + 3]);
+        const rightLabels = {
+          ca: tokens[startIdx + 4],
+          es: tokens[startIdx + 5],
+          en: tokens[startIdx + 6],
+        };
+        const rightPrice = parseMoney(tokens[startIdx + 7]);
+        if (!labels.ca || !rightLabels.ca) return null;
+        return {
+          leftLabels: labels,
+          leftPrice: leftPrice ?? 0,
+          rightLabels,
+          rightPrice: rightPrice ?? 0,
+        };
+      }
+      const leftLabel = tokens[startIdx];
+      const leftPrice = maybePrice1;
+      const rightLabel = tokens[startIdx + 2];
+      const rightPrice = maybePrice2;
+      if (!leftLabel || !rightLabel) return null;
+      return {
+        leftLabels: { ca: leftLabel, es: leftLabel, en: leftLabel },
+        leftPrice: leftPrice ?? 0,
+        rightLabels: { ca: rightLabel, es: rightLabel, en: rightLabel },
+        rightPrice: rightPrice ?? 0,
+      };
+    };
+    const parsed = parseSwitchBlock(0);
+    if (!parsed) return [];
     return [{
-      id: `${buildServiceId(leftLabel, 0)}-${buildServiceId(rightLabel, 1)}-switch`,
-      labels: { ca: leftLabel, es: leftLabel, en: leftLabel },
-      label: leftLabel,
-      leftLabel,
-      leftPrice: leftPrice ?? 0,
-      rightLabel,
-      rightPrice: rightPrice ?? 0,
+      id: `${buildServiceId(parsed.leftLabels.ca, 0)}-${buildServiceId(parsed.rightLabels.ca, 1)}-switch`,
+      labels: { ca: parsed.leftLabels.ca, es: parsed.leftLabels.es, en: parsed.leftLabels.en },
+      label: parsed.leftLabels.ca,
+      leftLabel: parsed.leftLabels.ca,
+      leftLabels: parsed.leftLabels,
+      leftPrice: parsed.leftPrice,
+      rightLabel: parsed.rightLabels.ca,
+      rightLabels: parsed.rightLabels,
+      rightPrice: parsed.rightPrice,
       defaultSide: 'right',
       switchMode: true,
     }];
@@ -929,8 +964,8 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
           ? Number(extraItem.leftPrice ?? 0)
           : Number(extraItem.rightPrice ?? 0);
         currentPrice = switchPrice;
-        const leftLabel = extraItem.leftLabel || extraItem.label;
-        const rightLabel = extraItem.rightLabel || extraItem.label;
+        const leftLabel = getOptionLabel({ labels: extraItem.leftLabels, label: extraItem.leftLabel || extraItem.label }, lang) || extraItem.leftLabel || extraItem.label;
+        const rightLabel = getOptionLabel({ labels: extraItem.rightLabels, label: extraItem.rightLabel || extraItem.label }, lang) || extraItem.rightLabel || extraItem.label;
         const currentLabel = selectedSide === 'left' ? leftLabel : rightLabel;
         computedPrice = currentPrice;
         priceDetail = currentLabel;
