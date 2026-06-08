@@ -126,6 +126,12 @@ const SPREADSHEET_COLUMNS = {
   extraUnitValue: ['extraunitat'],
   extraExtresKind: ['extraextres', 'extra extres'],
   extraSwitch: ['extraswitch', 'extra switch', 'extralista switch', 'extraextresswitch', 'exrta switch'],
+  // PreusMenu columns
+  menuMinGuests: ['min', 'mínim', 'minimum'],
+  menuPricePerPerson: ['preu/p', 'preu per persona', 'price per person'],
+  menuDays: ['dia', 'days', 'días'],
+  menuMonths: ['mes', 'mesos', 'months'],
+  menuExceptions: ['excepte', 'exceptions', 'excepcions'],
 };
 
 function parseExtraType(value) {
@@ -508,12 +514,238 @@ function buildExtrasByVenue(rows) {
   return extrasByVenue;
 }
 
+// ────────────────────────────────────────────────────────────────
+// Menu Pricing Parser Functions
+// ────────────────────────────────────────────────────────────────
+
+function parseDays(dayCell) {
+  const raw = String(dayCell ?? '').trim().toLowerCase();
+  if (!raw) return [];
+  
+  const dayMap = {
+    'diumenge': 0, 'domingo': 0, 'sunday': 0, 'dg': 0, '0': 0,
+    'dilluns': 1, 'lunes': 1, 'monday': 1, 'dl': 1, '1': 1,
+    'dimarts': 2, 'martes': 2, 'tuesday': 2, 'dm': 2, '2': 2,
+    'dimecres': 3, 'miércoles': 3, 'wednesday': 3, 'dc': 3, '3': 3,
+    'dijous': 4, 'jueves': 4, 'thursday': 4, 'dj': 4, '4': 4,
+    'divendres': 5, 'viernes': 5, 'friday': 5, 'dv': 5, '5': 5,
+    'dissabte': 6, 'sábado': 6, 'saturday': 6, 'ds': 6, '6': 6,
+  };
+  
+  const tokens = raw.split(/[,;/|+\n-]/).map(t => t.trim()).filter(Boolean);
+  const days = [];
+  
+  for (const token of tokens) {
+    const normalized = normText(token);
+    
+    // Check for ranges like "dl-dv" or "1-5"
+    if (token.includes('-') && !token.includes(',')) {
+      const parts = token.split('-').map(p => p.trim());
+      if (parts.length === 2) {
+        const start = dayMap[parts[0]] !== undefined ? dayMap[parts[0]] : parseInt(parts[0]);
+        const end = dayMap[parts[1]] !== undefined ? dayMap[parts[1]] : parseInt(parts[1]);
+        if (Number.isInteger(start) && Number.isInteger(end) && start >= 0 && start <= 6 && end >= 0 && end <= 6) {
+          const [min, max] = start <= end ? [start, end] : [end, start];
+          for (let i = min; i <= max; i++) days.push(i);
+          continue;
+        }
+      }
+    }
+    
+    if (dayMap[normalized] !== undefined) {
+      days.push(dayMap[normalized]);
+    } else {
+      const num = parseInt(token);
+      if (Number.isInteger(num) && num >= 0 && num <= 6) {
+        days.push(num);
+      }
+    }
+  }
+  
+  return [...new Set(days)];
+}
+
+function parseMonths(monthCell) {
+  const raw = String(monthCell ?? '').trim().toLowerCase();
+  if (!raw) return [];
+  
+  const monthMap = {
+    'gener': 1, 'january': 1, 'january': 1, 'enero': 1, '1': 1,
+    'febrer': 2, 'february': 2, 'febrero': 2, '2': 2,
+    'març': 3, 'march': 3, 'marzo': 3, '3': 3,
+    'abril': 4, 'april': 4, 'abril': 4, '4': 4,
+    'maig': 5, 'may': 5, 'mayo': 5, '5': 5,
+    'juny': 6, 'june': 6, 'junio': 6, '6': 6,
+    'juliol': 7, 'july': 7, 'julio': 7, '7': 7,
+    'agost': 8, 'august': 8, 'agosto': 8, '8': 8,
+    'setembre': 9, 'september': 9, 'setembre': 9, 'septiembre': 9, '9': 9,
+    'octubre': 10, 'october': 10, 'octubre': 10, '10': 10,
+    'novembre': 11, 'november': 11, 'noviembre': 11, '11': 11,
+    'desembre': 12, 'december': 12, 'diciembre': 12, '12': 12,
+  };
+  
+  const tokens = raw.split(/[,;/|+\n-]/).map(t => t.trim()).filter(Boolean);
+  const months = [];
+  
+  for (const token of tokens) {
+    const normalized = normText(token);
+    
+    // Check for ranges like "juny-agost" or "6-8"
+    if (token.includes('-') && !token.includes(',')) {
+      const parts = token.split('-').map(p => p.trim());
+      if (parts.length === 2) {
+        const startNorm = normText(parts[0]);
+        const endNorm = normText(parts[1]);
+        const start = monthMap[startNorm] !== undefined ? monthMap[startNorm] : parseInt(parts[0]);
+        const end = monthMap[endNorm] !== undefined ? monthMap[endNorm] : parseInt(parts[1]);
+        if (Number.isInteger(start) && Number.isInteger(end) && start >= 1 && start <= 12 && end >= 1 && end <= 12) {
+          const [min, max] = start <= end ? [start, end] : [end, start];
+          for (let i = min; i <= max; i++) months.push(i);
+          continue;
+        }
+      }
+    }
+    
+    if (monthMap[normalized] !== undefined) {
+      months.push(monthMap[normalized]);
+    } else {
+      const num = parseInt(token);
+      if (Number.isInteger(num) && num >= 1 && num <= 12) {
+        months.push(num);
+      }
+    }
+  }
+  
+  return [...new Set(months)];
+}
+
+function parseExceptions(exceptionCell) {
+  const raw = String(exceptionCell ?? '').trim().toLowerCase();
+  if (!raw) return [];
+  
+  const exceptions = [];
+  const tokens = raw.split(/[,;/|+\n]/).map(t => t.trim().toLowerCase()).filter(Boolean);
+  
+  for (const token of tokens) {
+    const normalized = normText(token);
+    if (normalized.includes('cap') && normalized.includes('any')) exceptions.push('new-year');
+    if (normalized.includes('vigilia') || (normalized.includes('vigilies') && normalized.includes('festiu'))) exceptions.push('holiday-eve');
+    if (normalized.includes('festiu') || normalized.includes('festivo') || normalized.includes('holiday')) exceptions.push('holiday');
+  }
+  
+  return [...new Set(exceptions)];
+}
+
+function buildPriceMatrixFromMenu(rows) {
+  const priceMatrixByVenue = {};
+  
+  // Initialize structure for all venues
+  for (const venue of VENUES) {
+    priceMatrixByVenue[venue.id] = {};
+  }
+  
+  rows.forEach((row, index) => {
+    const venueCell = pickColumn(row, SPREADSHEET_COLUMNS.venue);
+    const yearCell = pickColumn(row, SPREADSHEET_COLUMNS.year);
+    const priceCell = pickColumn(row, SPREADSHEET_COLUMNS.menuPricePerPerson);
+    const minCell = pickColumn(row, SPREADSHEET_COLUMNS.menuMinGuests);
+    const dayCell = pickColumn(row, SPREADSHEET_COLUMNS.menuDays);
+    const monthCell = pickColumn(row, SPREADSHEET_COLUMNS.menuMonths);
+    const exceptionCell = pickColumn(row, SPREADSHEET_COLUMNS.menuExceptions);
+    
+    if (!venueCell || !yearCell || !priceCell || !dayCell || !monthCell) return;
+    
+    const venueIds = parseVenueIds(venueCell);
+    const year = parseYearCell(yearCell);
+    const price = parseMoney(priceCell);
+    const minGuests = Math.max(0, Number(minCell ?? 0));
+    const days = parseDays(dayCell);
+    const months = parseMonths(monthCell);
+    const exceptions = parseExceptions(exceptionCell);
+    
+    if (!venueIds.length || !year || price === null || !days.length || !months.length) return;
+    
+    for (const venueId of venueIds) {
+      if (!priceMatrixByVenue[venueId][year]) {
+        priceMatrixByVenue[venueId][year] = {};
+      }
+      
+      for (const dayOfWeek of days) {
+        if (!priceMatrixByVenue[venueId][year][dayOfWeek]) {
+          priceMatrixByVenue[venueId][year][dayOfWeek] = [];
+        }
+        
+        const entry = {
+          months,
+          price,
+          minGuests,
+        };
+        
+        if (exceptions.length) {
+          entry.exceptions = exceptions;
+        }
+        
+        priceMatrixByVenue[venueId][year][dayOfWeek].push(entry);
+      }
+    }
+  });
+  
+  return priceMatrixByVenue;
+}
+
+async function loadPricesFromSpreadsheet(workbook) {
+  if (!workbook || !workbook.SheetNames) return {};
+  
+  // Find the PreusMenu sheet
+  const pricesSheetName = workbook.SheetNames.find(name => 
+    normText(name).includes('preumenu') || normText(name).includes('prix menu') || normText(name).includes('menu preu')
+  );
+  
+  if (!pricesSheetName) {
+    console.warn('PreusMenu sheet not found in spreadsheet');
+    return {};
+  }
+  
+  const sheet = workbook.Sheets[pricesSheetName];
+  const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+  
+  return buildPriceMatrixFromMenu(rows);
+}
+
+function applyPriceMatrixToConfig(priceMatrixByVenue) {
+  for (const venue of VENUES) {
+    if (!PRICE_CONFIG.venues[venue.id]) continue;
+    
+    const venueMatrix = priceMatrixByVenue[venue.id];
+    if (!venueMatrix) continue;
+    
+    for (const year in venueMatrix) {
+      if (!PRICE_CONFIG.venues[venue.id].priceMatrix[year]) {
+        PRICE_CONFIG.venues[venue.id].priceMatrix[year] = {};
+      }
+      
+      // Merge or replace day entries
+      for (const dayOfWeek in venueMatrix[year]) {
+        PRICE_CONFIG.venues[venue.id].priceMatrix[year][dayOfWeek] = venueMatrix[year][dayOfWeek];
+      }
+    }
+  }
+}
+
 async function loadExtrasFromSpreadsheet() {
   if (typeof window === 'undefined' || typeof fetch !== 'function') return {};
   const response = await fetch(SPREADSHEET_URL, { cache: 'no-store' });
   if (!response.ok) throw new Error(`Spreadsheet fetch failed: ${response.status}`);
   const buffer = await response.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: 'array' });
+  
+  // Load prices from PreusMenu sheet
+  const priceMatrix = await loadPricesFromSpreadsheet(workbook);
+  if (Object.keys(priceMatrix).length > 0) {
+    applyPriceMatrixToConfig(priceMatrix);
+  }
+  
+  // Load extras from first sheet
   const firstSheetName = workbook.SheetNames[0];
   if (!firstSheetName) return {};
   const sheet = workbook.Sheets[firstSheetName];
