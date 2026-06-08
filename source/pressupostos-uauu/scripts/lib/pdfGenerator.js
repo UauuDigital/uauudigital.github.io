@@ -92,7 +92,6 @@ function buildPdfTableRows(form, quote, lang) {
     <tr>
       <td class="td-l">
         ${T[lang].menuService}
-        <div class="td-sub">${T[lang].pdfMenuDetail(form.guests, quote.pricePerPerson)}</div>
       </td>
       <td class="td-r">${eur(quote.menuBase)}</td>
     </tr>
@@ -100,13 +99,13 @@ function buildPdfTableRows(form, quote, lang) {
 
   const shortfallRow = quote.shortfall > 0 ? `
     <tr>
-      <td class="td-l" style="color:#a05030">
+      <td class="td-l">
         ${T[lang].minSupplement}
-        <div class="td-sub" style="color:#c07050">
+        <div class="td-sub">
           ${T[lang].pdfMinDetail(quote.shortfall, PRICE_CONFIG.venues[form.venue].minimumPenaltyPerPerson)}
         </div>
       </td>
-      <td class="td-r" style="color:#a05030">${eur(quote.penaltyAmt)}</td>
+      <td class="td-r">${eur(quote.penaltyAmt)}</td>
     </tr>
   ` : '';
 
@@ -161,7 +160,6 @@ function pdfHTML({ form, quote, venue, dateStr, coupleStr, refNum, today, t, lan
           <td class="total-td">
             <div class="t-label">${t.totalLabel}</div>
             <div class="t-amount">${eur(quote.total)}</div>
-            <div class="t-pp">${t.perGuest(quote.perPerson)}</div>
           </td>
           <td class="total-td"></td>
         </tr>

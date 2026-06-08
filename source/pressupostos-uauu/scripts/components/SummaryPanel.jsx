@@ -64,7 +64,6 @@ function SummaryPanel({ form, quote, lang }) {
             <div className="line-item">
               <div className="li-left">
                 <div className="li-label">{t.menuService}</div>
-                <div className="li-detail">{t.guestsX(form.guests, quote.pricePerPerson)}</div>
               </div>
               <div className="li-amount">{eur(quote.menuBase)}</div>
             </div>
@@ -72,10 +71,10 @@ function SummaryPanel({ form, quote, lang }) {
             {quote.shortfall > 0 && (
               <div className="line-item" style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--color-divider)' }}>
                 <div className="li-left">
-                  <div className="li-label" style={{ color: '#a05030' }}>{t.minSupplement}</div>
-                  <div className="li-detail" style={{ color: '#c07050' }}>{t.minDetail(quote.shortfall, quote.minGuests, PRICE_CONFIG.venues[form.venue].minimumPenaltyPerPerson)}</div>
+                  <div className="li-label">{t.minSupplement}</div>
+                  <div className="li-detail">{t.minDetail(quote.shortfall, quote.minGuests, PRICE_CONFIG.venues[form.venue].minimumPenaltyPerPerson)}</div>
                 </div>
-                <div className="li-amount" style={{ color: '#a05030' }}>{eur(quote.penaltyAmt)}</div>
+                <div className="li-amount">{eur(quote.penaltyAmt)}</div>
               </div>
             )}
 
@@ -107,11 +106,7 @@ function SummaryPanel({ form, quote, lang }) {
               <div className="total-amount">{eur(quote.total)}</div>
             </div>
 
-            {quote.shortfall > 0 && (
-              <div className="alert alert-warn" style={{ marginTop: 16 }}>
-                {t.minWarn(quote.minGuests, PRICE_CONFIG.venues[form.venue].minimumPenaltyPerPerson)}
-              </div>
-            )}
+
 
             <p className="summary-note">{t.note}</p>
           </div>
