@@ -33,7 +33,13 @@
 <body>
 <div id="root"></div>
 
-<!-- Configuration, Pricing, Venues, Translations & Business Logic -->
+<!-- Data modules (load in strict order) -->
+<script type="text/babel" data-presets="env,react" src="scripts/data/constants.js?v=20260603-1"></script>
+<script type="text/babel" data-presets="env,react" src="scripts/data/utils.js?v=20260603-1"></script>
+<script type="text/babel" data-presets="env,react" src="scripts/data/parsers.js?v=20260603-1"></script>
+<script type="text/babel" data-presets="env,react" src="scripts/data/config.js?v=20260603-1"></script>
+<script type="text/babel" data-presets="env,react" src="scripts/data/spreadsheet.js?v=20260603-1"></script>
+<script type="text/babel" data-presets="env,react" src="scripts/data/calculator.js?v=20260603-1"></script>
 <script type="text/babel" data-presets="env,react" src="scripts/data.js?v=20260603-1"></script>
 
 <!-- Formatters & Utilities -->
