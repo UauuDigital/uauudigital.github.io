@@ -249,7 +249,7 @@ const PRICE_CONFIG = {
         ],
         2027: [
           { id: 'ceremony',          label: 'Cerimònia',                price: 1740, optional: true  },
-          { id: 'essential-services',label: 'Quota serveis essencials', price: 1490, optional: false },
+          { id: 'essential-services',label: 'Quota serveis essencials', price: 1890, optional: false },
           { id: 'dj',                label: 'DJ',                       price: 1250, optional: false },
           { id: 'banquetexterior',  label: 'Banquet a l\'exterior',    price: 2500, optional: true  },
           ...QUANTITY_EXTRAS[2027],
