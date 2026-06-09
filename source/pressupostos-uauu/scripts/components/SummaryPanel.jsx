@@ -35,7 +35,6 @@
             <div className="line-item">
               <div className="li-left">
                 <div className="li-label">{t.menuService}</div>
-                <div className="li-detail">{t.menuDetail(form.guests, quote.pricePerPerson)}</div>
               </div>
               <div className="li-amount">{eur(quote.menuBase)}</div>
             </div>
@@ -43,10 +42,10 @@
             {quote.shortfall > 0 && (
               <div className="line-item" style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--color-divider)' }}>
                 <div className="li-left">
-                  <div className="li-label" style={{ color: '#a05030' }}>{t.minSupplement}</div>
-                  <div className="li-detail" style={{ color: '#c07050' }}>{`${quote.shortfall} pers. per sota el mínim (${quote.minGuests}) × ${eur(PRICE_CONFIG.venues[form.venue].minimumPenaltyPerPerson)}`}</div>
+                  <div className="li-label">{t.minSupplement}</div>
+                  <div className="li-detail">{`${quote.shortfall} pers. per sota el mínim (${quote.minGuests}) × ${eur(PRICE_CONFIG.venues[form.venue].minimumPenaltyPerPerson)}`}</div>
                 </div>
-                <div className="li-amount" style={{ color: '#a05030' }}>{eur(quote.penaltyAmt)}</div>
+                <div className="li-amount">{eur(quote.penaltyAmt)}</div>
               </div>
             )}
 
@@ -74,11 +73,6 @@
               <div className="total-label">{t.totalLabel}</div>
               <div className="total-amount">{eur(quote.total)}</div>
             </div>
-            {quote.shortfall > 0 && (
-              <div className="alert alert-warn" style={{ marginTop: 16 }}>
-                {`Per sota del mínim de ${quote.minGuests} convidats. S'aplica suplement de ${eur(PRICE_CONFIG.venues[form.venue].minimumPenaltyPerPerson)}/pers.`}
-              </div>
-            )}
             <p className="summary-note">{t.footerNote}</p>
           </div>
           <button className="export-btn" onClick={handleExport}>
