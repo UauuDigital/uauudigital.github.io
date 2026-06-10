@@ -8,179 +8,19 @@ const PRICE_CONFIG = {
 
   venues: {
     'mas-vivencs': {
-      minimumPenaltyPerPerson: 75,
-      priceMatrix: {
-        2026: {
-          6: [
-            { months: [6,7,9,10], price: 154, minGuests: 100 },
-            { months: [5,8,11],   price: 154, minGuests: 80  },
-            { months: [4],        price: 142, minGuests: 35  },
-            { months: [1,2,3,12], price: 129, minGuests: 35  },
-          ],
-          5: [
-            { months: [6,7,9,10],      price: 142, minGuests: 60 },
-            { months: [5,8],           price: 142, minGuests: 35 },
-            { months: [1,2,3,4,11,12], price: 129, minGuests: 35 },
-          ],
-          0: [
-            { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 },
-          ],
-          1: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
-          2: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
-          3: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
-          4: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
-        },
-        2027: {
-          6: [
-            { months: [6,7,9,10], price: 154, minGuests: 100 },
-            { months: [5,8,11],   price: 154, minGuests: 80  },
-            { months: [4],        price: 144, minGuests: 60  },
-            { months: [1,2,3,12], price: 134, minGuests: 35  },
-          ],
-          5: [
-            { months: [6,7,9,10],      price: 144, minGuests: 60 },
-            { months: [5,8],           price: 144, minGuests: 35 },
-            { months: [1,2,3,4,11,12], price: 134, minGuests: 35 },
-          ],
-          0: [
-            { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 },
-          ],
-          1: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
-          2: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
-          3: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
-          4: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
-        },
-      },
+      priceMatrix: {},
       extras: { 2026: [], 2027: [] },
     },
     'castell-de-tous': {
-      minimumPenaltyPerPerson: 100,
-      priceMatrix: {
-        2026: {
-          6: [
-            { months: [6,7,9,10], price: 160, minGuests: 80 },
-            { months: [5,8,11],   price: 160, minGuests: 60 },
-            { months: [4],        price: 147, minGuests: 35 },
-            { months: [1,2,3,12], price: 135, minGuests: 35 },
-          ],
-          5: [
-            { months: [6,7,9,10],      price: 147, minGuests: 45 },
-            { months: [5,8],           price: 147, minGuests: 35 },
-            { months: [1,2,3,4,11,12], price: 135, minGuests: 35 },
-          ],
-          0: [
-            { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 135, minGuests: 35 },
-          ],
-          1: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 135, minGuests: 35 } ],
-          2: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 135, minGuests: 35 } ],
-          3: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 135, minGuests: 35 } ],
-          4: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 135, minGuests: 35 } ],
-        },
-        2027: {
-          6: [
-            { months: [6,7,9,10], price: 160, minGuests: 80 },
-            { months: [5,8,11],   price: 160, minGuests: 60 },
-            { months: [4],        price: 150, minGuests: 45 },
-            { months: [1,2,3,12], price: 140, minGuests: 35 },
-          ],
-          5: [
-            { months: [6,7,9,10],      price: 150, minGuests: 45 },
-            { months: [5,8],           price: 150, minGuests: 35 },
-            { months: [1,2,3,4,11,12], price: 140, minGuests: 35 },
-          ],
-          0: [
-            { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 140, minGuests: 35 },
-          ],
-          1: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 140, minGuests: 35 } ],
-          2: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 140, minGuests: 35 } ],
-          3: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 140, minGuests: 35 } ],
-          4: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 140, minGuests: 35 } ],
-        },
-      },
+      priceMatrix: {},
       extras: { 2026: [], 2027: [] },
     },
     'can-macia': {
-      minimumPenaltyPerPerson: 75,
-      priceMatrix: {
-        2026: {
-          6: [
-            { months: [6,7,9,10], price: 154, minGuests: 120 },
-            { months: [5,8,11],   price: 154, minGuests: 80  },
-            { months: [4],        price: 142, minGuests: 35  },
-            { months: [1,2,3,12], price: 129, minGuests: 35  },
-          ],
-          5: [
-            { months: [6,7,9,10],      price: 142, minGuests: 60 },
-            { months: [5,8],           price: 142, minGuests: 35 },
-            { months: [1,2,3,4,11,12], price: 129, minGuests: 35 },
-          ],
-          0: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
-          1: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
-          2: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
-          3: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
-          4: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 129, minGuests: 35 } ],
-        },
-        2027: {
-          6: [
-            { months: [6,7,9,10], price: 154, minGuests: 120 },
-            { months: [5,8,11],   price: 154, minGuests: 80  },
-            { months: [4],        price: 144, minGuests: 60  },
-            { months: [1,2,3,12], price: 134, minGuests: 35  },
-          ],
-          5: [
-            { months: [6,7,9,10],      price: 144, minGuests: 60 },
-            { months: [5,8],           price: 144, minGuests: 35 },
-            { months: [1,2,3,4,11,12], price: 134, minGuests: 35 },
-          ],
-          0: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
-          1: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
-          2: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
-          3: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
-          4: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 134, minGuests: 35 } ],
-        },
-      },
+      priceMatrix: {},
       extras: { 2026: [], 2027: [] },
     },
     'ca-nalzina': {
-      minimumPenaltyPerPerson: 75,
-      priceMatrix: {
-        2026: {
-          6: [
-            { months: [6,7,9,10], price: 158, minGuests: 120 },
-            { months: [5,8,11],   price: 158, minGuests: 80  },
-            { months: [4],        price: 146, minGuests: 35  },
-            { months: [1,2,3,12], price: 133, minGuests: 35  },
-          ],
-          5: [
-            { months: [6,7,9,10],      price: 146, minGuests: 60 },
-            { months: [5,8],           price: 146, minGuests: 35 },
-            { months: [1,2,3,4,11,12], price: 133, minGuests: 35 },
-          ],
-          0: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 133, minGuests: 35 } ],
-          1: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 133, minGuests: 35 } ],
-          2: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 133, minGuests: 35 } ],
-          3: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 133, minGuests: 35 } ],
-          4: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 133, minGuests: 35 } ],
-        },
-        2027: {
-          6: [
-            { months: [6,7,9,10], price: 158, minGuests: 120 },
-            { months: [5,8,11],   price: 158, minGuests: 80  },
-            { months: [4],        price: 148, minGuests: 60  },
-            { months: [1,2,3,12], price: 138, minGuests: 35  },
-          ],
-          5: [
-            { months: [6,7,9,10],      price: 148, minGuests: 60 },
-            { months: [5,8],           price: 148, minGuests: 35 },
-            { months: [1,2,3,4,11,12], price: 138, minGuests: 35 },
-          ],
-          0: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 138, minGuests: 35 } ],
-          1: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 138, minGuests: 35 } ],
-          2: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 138, minGuests: 35 } ],
-          3: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 138, minGuests: 35 } ],
-          4: [ { months: [1,2,3,4,5,6,7,8,9,10,11,12], price: 138, minGuests: 35 } ],
-        },
-      },
+      priceMatrix: {},
       extras: { 2026: [], 2027: [] },
     },
   },

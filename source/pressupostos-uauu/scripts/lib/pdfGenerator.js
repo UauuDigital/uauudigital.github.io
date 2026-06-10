@@ -3,7 +3,7 @@
   const vatPct = Math.round(PRICE_CONFIG.vatRate * 100);
   const linesRows = [
     `<tr><td class="td-l">${t.menuService}</td><td class="td-r">${eur(quote.menuBase)}</td></tr>`,
-    ...(quote.shortfall > 0 ? [`<tr><td class="td-l">${t.minSupplement}<div class="td-sub"">${t.pdfMinDetail(quote.shortfall, PRICE_CONFIG.venues[form.venue].minimumPenaltyPerPerson)}</div></td><td class="td-r">${eur(quote.penaltyAmt)}</td></tr>`] : []),
+    ...(quote.shortfall > 0 ? [`<tr><td class="td-l">${t.minSupplement}<div class="td-sub">${t.pdfMinDetail(quote.guests ?? form.guests, quote.minimumPenaltyPerPerson)}</div></td><td class="td-r">${eur(quote.penaltyAmt)}</td></tr>`] : []),
     ...quote.extrasLines.map(e => `<tr><td class="td-l">${e.label}${e.isMandatory ? ` <span style="font-size:10px;color:#999;font-style:normal">${t.mandatory}</span>` : ''}${e.priceDetail ? `<div class="td-sub">${e.priceDetail}</div>` : ''}</td><td class="td-r">${eur(e.computedPrice)}</td></tr>`),
   ].join('');
 

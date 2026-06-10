@@ -3,18 +3,16 @@ function DateInfoStrip({ venueId, date }) {
   const d = new Date(date + 'T12:00:00');
   const year = d.getFullYear(), month = d.getMonth() + 1, dow = d.getDay();
   const slot = lookupPrice(venueId, year, month, dow);
-  const unavailable = !slot && Object.keys(PRICE_CONFIG.venues[venueId]?.priceMatrix || {}).length > 0;
-  const notConfigured = Object.keys(PRICE_CONFIG.venues[venueId]?.priceMatrix || {}).length === 0;
+  const hasSpreadsheetPriceData = Object.keys(PRICE_CONFIG.venues[venueId]?.priceMatrix || {}).length > 0;
 
-  if (notConfigured) return (
+  if (!hasSpreadsheetPriceData) return (
     <div className="alert alert-info">Preus d'aquesta finca pendents de configurar.</div>
   );
-  if (unavailable) return (
+  if (!slot) return (
     <div className="alert alert-error">
       {DAYS_CA[dow]} no és un dia disponible per a {VENUES.find(v => v.id === venueId)?.name}. Tria divendres, dissabte o diumenge.
     </div>
   );
-  if (!slot) return null;
 
   return (
     <div>
@@ -38,7 +36,7 @@ function DateInfoStrip({ venueId, date }) {
       </div>
       {slot.year < year && (
         <div className="alert alert-info" style={{ marginTop: 12 }}>
-          Preus {slot.year} aplicats — tarifes {year} encara no disponibles.
+          Preus {slot.year} aplicats - tarifes {year} encara no disponibles.
         </div>
       )}
     </div>

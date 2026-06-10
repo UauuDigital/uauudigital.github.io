@@ -26,7 +26,7 @@
     setForm(f => ({
       ...f,
       selectedExtras: { ...f.selectedExtras, [id]: val },
-      extraQuantities: val || id !== 'cookiebar' ? f.extraQuantities : { ...f.extraQuantities, [id]: 0 }
+      extraQuantities: val ? f.extraQuantities : { ...f.extraQuantities, [id]: 0 }
     }));
   }
   function setQuantity(id, val) { setForm(f => ({ ...f, extraQuantities: { ...f.extraQuantities, [id]: val } })); }
@@ -47,8 +47,7 @@
   }
 
   const dateYear = form.date ? new Date(form.date + 'T12:00:00').getFullYear() : null;
-  const menuStaffExtra = getQuantityExtra(form.venue, dateYear, 'menu-staff');
-  const menuInfantilExtra = getQuantityExtra(form.venue, dateYear, 'menu-infantil');
+  const barLliureExtra = getQuantityExtra(form.venue, dateYear, 'barlliure');
   const hasMountedRef = React.useRef(false);
   React.useEffect(() => {
     if (!hasMountedRef.current) {
@@ -146,28 +145,19 @@
                 <input type="range" min={10} max={400} step={1} value={form.guests} onChange={e => set('guests', Number(e.target.value))} />
                 <div className="range-labels"><span>10</span><span>400</span></div>
               </div>
-              <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                {menuStaffExtra && (
+              {barLliureExtra && (
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <div className="field" style={{ flex: 1 }}>
-                    <label>Menú Staff</label>
-                    <div className="event-extra-price" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span>{eur(menuStaffExtra.price)}/pers. + IVA:</span>
-                      <input className="extra-quantity-input" type="number" min={0} step={1} value={form.extraQuantities[menuStaffExtra.id] ?? 0} onChange={e => setQuantity(menuStaffExtra.id, normalizeQuantity(e.target.value))} aria-label="Menú Staff quantitat" />
-                      <span className="extra-quantity-unit">pers.</span>
+                    <label>Barra lliure</label>
+                    <div className="event-extra-price" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                      <span>2 hores incloses al menú</span>
+                      <input className="extra-quantity-input" type="number" min={0} max={3} step={0.5} value={form.extraOptions?.barlliure?.hours ?? 0} onChange={e => setExtraOption('barlliure', 'hours', Math.max(0, Math.min(3, Number(e.target.value) || 0)))} aria-label="Hores extres barra lliure" />
+                      <span className="extra-quantity-unit">hores extres</span>
+                      <button type="button" className={`toggle-btn ${(form.extraOptions?.barlliure?.premium ?? false) ? 'active' : ''}`} onClick={() => setExtraOption('barlliure', 'premium', !(form.extraOptions?.barlliure?.premium ?? false))}>Premium</button>
                     </div>
                   </div>
-                )}
-                {menuInfantilExtra && (
-                  <div className="field" style={{ flex: 1 }}>
-                    <label>Menú infantil</label>
-                    <div className="event-extra-price" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span>{eur(menuInfantilExtra.price)}/pers. + IVA:</span>
-                      <input className="extra-quantity-input" type="number" min={0} step={1} value={form.extraQuantities[menuInfantilExtra.id] ?? 0} onChange={e => setQuantity(menuInfantilExtra.id, normalizeQuantity(e.target.value))} aria-label="Menú infantil quantitat" />
-                      <span className="extra-quantity-unit">pers.</span>
-                    </div>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
             <DateInfoStrip venueId={form.venue} date={form.date} />
           </div>

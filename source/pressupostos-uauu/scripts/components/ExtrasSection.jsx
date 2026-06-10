@@ -14,7 +14,7 @@
 }) {
   const [optionalSelection, setOptionalSelection] = React.useState('');
   const extras = React.useMemo(
-    () => (venueId && year ? getExtras(venueId, year).filter(e => !['menu-staff', 'menu-infantil'].includes(e.id)) : []),
+    () => (venueId && year ? getExtras(venueId, year).filter(e => e.id !== 'barlliure') : []),
     [venueId, year]
   );
 
@@ -169,8 +169,6 @@
         const hasExtraUnitInput = !!e.extraUnitPair;
         const quantity = hasQuantityInput ? (extraQuantities?.[e.id] ?? 0) : null;
         const opts = extraOptions?.[e.id] || {};
-        const isCookieBar = e.id === 'cookiebar';
-        const isBarLliure = e.id === 'barlliure';
         const switchOption = Array.isArray(e.extraExtresOptions)
           ? e.extraExtresOptions.find(opt => opt && opt.switchMode)
           : null;
@@ -217,16 +215,12 @@
           }
         }
 
-        const priceLabel = isCookieBar
-          ? `${eur(currentPrice)} base + ${eur(e.extraPackPrice || 0)}/extra + IVA`
-          : isBarLliure
-            ? `2h incloses`
-            : hasSwitchOptions
-              ? `${eur(switchCurrentPrice)} + IVA`
-            : hasQuantityInput
-              ? `${eur(currentPrice)}/${quantityUnitLabel(e)} + IVA`
-              : isLlinda
-                ? `${eur(currentPrice)} + IVA (llinda)`
+        const priceLabel = hasSwitchOptions
+          ? `${eur(switchCurrentPrice)} + IVA`
+          : hasQuantityInput
+            ? `${eur(currentPrice)}/${quantityUnitLabel(e)} + IVA`
+            : isLlinda
+              ? `${eur(currentPrice)} + IVA (llinda)`
               : e.pricePerPerson
                 ? `${eur(e.pricePerPerson)}/pers. (mínim ${eur(e.minPrice)}) + IVA`
                 : `${eur(currentPrice)} + IVA`;
@@ -303,56 +297,7 @@
               )}
             </div>
 
-            {isBarLliure ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                <div className="extra-quantity" style={{ marginLeft: 0 }}>
-                  <input
-                    className="extra-quantity-input"
-                    type="number"
-                    min={0}
-                    step={1}
-                    value={opts.adults ?? guests}
-                    onChange={ev => onOptionChange(e.id, 'adults', Math.max(0, Number(ev.target.value) || 0))}
-                    aria-label="Nombre d'adults barra lliure"
-                  />
-                  <span className="extra-quantity-unit">adults</span>
-                </div>
-                <div className="extra-quantity" style={{ marginLeft: 0 }}>
-                  <input
-                    className="extra-quantity-input"
-                    type="number"
-                    min={0}
-                    max={3}
-                    step={0.5}
-                    value={opts.hours ?? 0}
-                    onChange={ev => onOptionChange(e.id, 'hours', Math.max(0, Math.min(3, Number(ev.target.value) || 0)))}
-                    aria-label="Hores extres de barra lliure"
-                  />
-                  <span className="extra-quantity-unit">hores extres</span>
-                </div>
-                <div className="extra-toggle" style={{ marginLeft: 0 }}>
-                  <button className={`toggle-btn ${opts.premium ? 'active' : ''}`} onClick={() => onOptionChange(e.id, 'premium', true)}>Premium</button>
-                  <button className={`toggle-btn ${!opts.premium ? 'active' : ''}`} onClick={() => onOptionChange(e.id, 'premium', false)}>Normal</button>
-                </div>
-              </div>
-            ) : isCookieBar ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                {selectedExtras[e.id] && (
-                  <div className="extra-quantity" style={{ marginLeft: 0 }}>
-                    <input
-                      className="extra-quantity-input"
-                      type="number"
-                      min={0}
-                      step={1}
-                      value={quantity}
-                      onChange={ev => onQuantityChange(e.id, normalizeQuantity(ev.target.value))}
-                      aria-label={`${e.label} extres`}
-                    />
-                    <span className="extra-quantity-unit">extres</span>
-                  </div>
-                )}
-              </div>
-            ) : hasQuantityInput || hasExtraUnitInput ? (
+            {hasQuantityInput || hasExtraUnitInput ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {hasQuantityInput && (
                   <div className="extra-quantity">

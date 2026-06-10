@@ -126,21 +126,55 @@ function buildExtrasByVenue(rows) {
   return extrasByVenue;
 }
 
+function getDirectCellByNormalizedKey(row, targetKey) {
+  const wanted = normText(targetKey);
+  for (const key of Object.keys(row || {})) {
+    if (normText(key) === wanted) return row[key];
+  }
+  return undefined;
+}
+
+function parsePricePair(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return { full: null, half: null };
+  const parts = raw.split(',').map(s => s.trim()).filter(Boolean);
+  if (parts.length >= 2) {
+    return { full: parseMoney(parts[0]), half: parseMoney(parts[1]) };
+  }
+  const single = parseMoney(raw);
+  return { full: single, half: single };
+}
+
 function parseDays(dayCell) {
   const raw = String(dayCell ?? '').trim().toLowerCase();
-  if (!raw) return [];
+  if (!raw) return [0, 1, 2, 3, 4, 5, 6];
+
+  const normalizedRaw = normText(raw);
+  if (
+    raw === '*' ||
+    normalizedRaw === 'tots' ||
+    normalizedRaw.includes('tots els dies') ||
+    normalizedRaw.includes('all days') ||
+    normalizedRaw.includes('every day')
+  ) {
+    return [0, 1, 2, 3, 4, 5, 6];
+  }
   
   const dayMap = {
-    'diumenge': 0, 'domingo': 0, 'sunday': 0, 'dg': 0, '0': 0,
-    'dilluns': 1, 'lunes': 1, 'monday': 1, 'dl': 1, '1': 1,
-    'dimarts': 2, 'martes': 2, 'tuesday': 2, 'dm': 2, '2': 2,
-    'dimecres': 3, 'miércoles': 3, 'wednesday': 3, 'dc': 3, '3': 3,
-    'dijous': 4, 'jueves': 4, 'thursday': 4, 'dj': 4, '4': 4,
-    'divendres': 5, 'viernes': 5, 'friday': 5, 'dv': 5, '5': 5,
-    'dissabte': 6, 'sábado': 6, 'saturday': 6, 'ds': 6, '6': 6,
+    'diumenge': 0, 'domingo': 0, 'sunday': 0, 'dg': 0, 'dg.': 0, 'dgo': 0, '0': 0,
+    'dilluns': 1, 'lunes': 1, 'monday': 1, 'dl': 1, 'dl.': 1, 'lun': 1, '1': 1,
+    'dimarts': 2, 'martes': 2, 'tuesday': 2, 'dm': 2, 'dm.': 2, 'mar': 2, '2': 2,
+    'dimecres': 3, 'miércoles': 3, 'miercoles': 3, 'wednesday': 3, 'dc': 3, 'dc.': 3, '3': 3,
+    'dijous': 4, 'jueves': 4, 'thursday': 4, 'dj': 4, 'dj.': 4, 'jue': 4, '4': 4,
+    'divendres': 5, 'viernes': 5, 'friday': 5, 'dv': 5, 'dv.': 5, 'vie': 5, '5': 5,
+    'dissabte': 6, 'sábado': 6, 'sabado': 6, 'saturday': 6, 'ds': 6, 'ds.': 6, 'sab': 6, '6': 6,
   };
   
-  const tokens = raw.split(/[,;/|+\n-]/).map(t => t.trim()).filter(Boolean);
+  const tokens = raw
+    .replace(/\s+i\s+/gi, ',')
+    .split(/[,;/|+\n-]/)
+    .map(t => t.trim())
+    .filter(Boolean);
   const days = [];
   
   for (const token of tokens) {
@@ -159,12 +193,23 @@ function parseDays(dayCell) {
       }
     }
     
-    if (dayMap[normalized] !== undefined) {
-      days.push(dayMap[normalized]);
+    const directMatch = dayMap[normalized];
+    if (directMatch !== undefined) {
+      days.push(directMatch);
     } else {
-      const num = parseInt(token);
-      if (Number.isInteger(num) && num >= 0 && num <= 6) {
-        days.push(num);
+      let matched = false;
+      for (const [label, value] of Object.entries(dayMap)) {
+        if (label.length > 1 && normalized.includes(label)) {
+          days.push(value);
+          matched = true;
+          break;
+        }
+      }
+      if (!matched) {
+        const num = parseInt(token);
+        if (Number.isInteger(num) && num >= 0 && num <= 6) {
+          days.push(num);
+        }
       }
     }
   }
@@ -174,7 +219,7 @@ function parseDays(dayCell) {
 
 function parseMonths(monthCell) {
   const raw = String(monthCell ?? '').trim().toLowerCase();
-  if (!raw) return [];
+  if (!raw) return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
   
   const monthMap = {
     'gener': 1, 'january': 1, 'enero': 1, '1': 1,
@@ -242,6 +287,54 @@ function parseExceptions(exceptionCell) {
   return [...new Set(exceptions)];
 }
 
+function buildBarLliureByVenue(rows) {
+  const byVenue = {};
+  for (const venue of VENUES) byVenue[venue.id] = {};
+
+  rows.forEach(row => {
+    const venueCell = pickColumn(row, ['mases', 'masia', 'finca', 'venue']);
+    const yearCell = pickColumn(row, ['ay', 'any', 'year']);
+    const minCell = pickColumn(row, ['min', 'mín', 'minimum']);
+    const siMinCell = pickColumn(row, ['simin€', 'simin', 'simin€', 'si min', 'si min€']);
+    const noMinCell = pickColumn(row, ['nomin#', 'nomin', 'no min', 'no min#']);
+    const premiumCell = pickColumn(row, ['premium']);
+
+    if (!venueCell || !yearCell) return;
+    const venueIds = parseVenueIds(venueCell);
+    const year = parseYearCell(yearCell);
+    if (!venueIds.length || !year) return;
+
+    const minAdults = Math.max(0, Number(minCell ?? 0));
+    const siMin = parsePricePair(siMinCell);
+    const noMin = parsePricePair(noMinCell);
+    const premium = parseMoney(premiumCell);
+
+    for (const venueId of venueIds) {
+      if (!byVenue[venueId][year]) byVenue[venueId][year] = [];
+      byVenue[venueId][year].push({
+        id: 'barlliure',
+        label: 'Barra lliure',
+        labels: { ca: 'Barra lliure', es: 'Barra libre', en: 'Open bar' },
+        optional: true,
+        quantityBased: true,
+        unit: 'person',
+        year,
+        minAdults,
+        barLliure: true,
+        barLliureRates: {
+          noMinFull: noMin.full,
+          noMinHalf: noMin.half,
+          siMinFull: siMin.full,
+          siMinHalf: siMin.half,
+          premium,
+        },
+      });
+    }
+  });
+
+  return byVenue;
+}
+
 function buildPriceMatrixFromMenu(rows) {
   const priceMatrixByVenue = {};
   
@@ -254,16 +347,19 @@ function buildPriceMatrixFromMenu(rows) {
     const yearCell = pickColumn(row, SPREADSHEET_COLUMNS.year);
     const priceCell = pickColumn(row, SPREADSHEET_COLUMNS.menuPricePerPerson);
     const minCell = pickColumn(row, SPREADSHEET_COLUMNS.menuMinGuests);
+    const penaltyCell = pickColumn(row, SPREADSHEET_COLUMNS.menuPenaltyPerPerson);
     const dayCell = pickColumn(row, SPREADSHEET_COLUMNS.menuDays);
     const monthCell = pickColumn(row, SPREADSHEET_COLUMNS.menuMonths);
     const exceptionCell = pickColumn(row, SPREADSHEET_COLUMNS.menuExceptions);
     
-    if (!venueCell || !yearCell || !priceCell || !dayCell || !monthCell) return;
+    if (!venueCell || !yearCell || !priceCell) return;
     
     const venueIds = parseVenueIds(venueCell);
     const year = parseYearCell(yearCell);
     const price = parseMoney(priceCell);
     const minGuests = Math.max(0, Number(minCell ?? 0));
+    const penaltyRaw = penaltyCell ?? getDirectCellByNormalizedKey(row, 'PreuComp');
+    const minimumPenaltyPerPerson = parseMoney(penaltyRaw);
     const days = parseDays(dayCell);
     const months = parseMonths(monthCell);
     const exceptions = parseExceptions(exceptionCell);
@@ -285,6 +381,10 @@ function buildPriceMatrixFromMenu(rows) {
           price,
           minGuests,
         };
+
+        if (minimumPenaltyPerPerson !== null) {
+          entry.minimumPenaltyPerPerson = minimumPenaltyPerPerson;
+        }
         
         if (exceptions.length) {
           entry.exceptions = exceptions;
@@ -294,25 +394,56 @@ function buildPriceMatrixFromMenu(rows) {
       }
     }
   });
+
+  for (const venueId of Object.keys(priceMatrixByVenue)) {
+    for (const year of Object.keys(priceMatrixByVenue[venueId])) {
+      for (const dayOfWeek of Object.keys(priceMatrixByVenue[venueId][year])) {
+        priceMatrixByVenue[venueId][year][dayOfWeek].sort((a, b) => {
+          const aHasPenalty = Number.isFinite(Number(a.minimumPenaltyPerPerson)) ? 1 : 0;
+          const bHasPenalty = Number.isFinite(Number(b.minimumPenaltyPerPerson)) ? 1 : 0;
+          if (aHasPenalty !== bHasPenalty) return bHasPenalty - aHasPenalty;
+          return (b.months?.length || 0) - (a.months?.length || 0);
+        });
+      }
+    }
+  }
   
   return priceMatrixByVenue;
 }
 
+function sheetRowsWithHeaders(sheet) {
+  if (!sheet) return [];
+  return XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+}
+
+function loadPriceRowsFromWorkbook(workbook) {
+  if (!workbook || !workbook.SheetNames) return [];
+
+  const sheetName = workbook.SheetNames.find(name => normText(name) === normText('PreusMenu'));
+  if (!sheetName) return [];
+
+  const sheet = workbook.Sheets[sheetName];
+  return sheetRowsWithHeaders(sheet);
+}
+
+function loadBarLliureRowsFromWorkbook(workbook) {
+  if (!workbook || !workbook.SheetNames) return [];
+  for (const name of workbook.SheetNames) {
+    const rows = sheetRowsWithHeaders(workbook.Sheets[name]);
+    if (!rows.length) continue;
+    const keys = Object.keys(rows[0] || {}).map(normText);
+    const hasBarHeaders = ['mases', 'ay', 'min', 'simin', 'nomin', 'premium'].every(h => keys.some(k => k.includes(h)));
+    if (hasBarHeaders) return rows;
+  }
+  return [];
+}
+
 async function loadPricesFromSpreadsheet(workbook) {
-  if (!workbook || !workbook.SheetNames) return {};
-  
-  const pricesSheetName = workbook.SheetNames.find(name => 
-    normText(name).includes('preumenu') || normText(name).includes('prix menu') || normText(name).includes('menu preu')
-  );
-  
-  if (!pricesSheetName) {
+  const rows = loadPriceRowsFromWorkbook(workbook);
+  if (!rows.length) {
     console.warn('PreusMenu sheet not found in spreadsheet');
     return {};
   }
-  
-  const sheet = workbook.Sheets[pricesSheetName];
-  const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-  
   return buildPriceMatrixFromMenu(rows);
 }
 
@@ -335,6 +466,20 @@ function applyPriceMatrixToConfig(priceMatrixByVenue) {
   }
 }
 
+function applyBarLliureToConfig(barByVenue) {
+  for (const venue of VENUES) {
+    if (!PRICE_CONFIG.venues[venue.id]) continue;
+    const venueRows = barByVenue?.[venue.id] || {};
+    for (const year of Object.keys(venueRows)) {
+      if (!PRICE_CONFIG.venues[venue.id].extras[year]) PRICE_CONFIG.venues[venue.id].extras[year] = [];
+      PRICE_CONFIG.venues[venue.id].extras[year] = [
+        ...PRICE_CONFIG.venues[venue.id].extras[year].filter(e => e.id !== 'barlliure'),
+        ...venueRows[year],
+      ];
+    }
+  }
+}
+
 async function loadExtrasFromSpreadsheet() {
   if (typeof window === 'undefined' || typeof fetch !== 'function') return {};
   const response = await fetch(SPREADSHEET_URL, { cache: 'no-store' });
@@ -343,8 +488,10 @@ async function loadExtrasFromSpreadsheet() {
   const workbook = XLSX.read(buffer, { type: 'array' });
   
   const priceMatrix = await loadPricesFromSpreadsheet(workbook);
-  if (Object.keys(priceMatrix).length > 0) {
-    applyPriceMatrixToConfig(priceMatrix);
+  applyPriceMatrixToConfig(priceMatrix);
+  const barLliureRows = loadBarLliureRowsFromWorkbook(workbook);
+  if (barLliureRows.length) {
+    applyBarLliureToConfig(buildBarLliureByVenue(barLliureRows));
   }
   
   const firstSheetName = workbook.SheetNames[0];

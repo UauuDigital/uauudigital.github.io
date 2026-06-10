@@ -43,7 +43,7 @@
               <div className="line-item" style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--color-divider)' }}>
                 <div className="li-left">
                   <div className="li-label">{t.minSupplement}</div>
-                  <div className="li-detail">{`${quote.shortfall} pers. per sota el mínim (${quote.minGuests}) × ${eur(PRICE_CONFIG.venues[form.venue].minimumPenaltyPerPerson)}`}</div>
+                  <div className="li-detail">{`${quote.guests ?? form.guests} pers. × ${eur(quote.minimumPenaltyPerPerson)} (per sota del mínim ${quote.minGuests})`}</div>
                 </div>
                 <div className="li-amount">{eur(quote.penaltyAmt)}</div>
               </div>
