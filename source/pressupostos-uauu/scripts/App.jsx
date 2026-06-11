@@ -2,7 +2,7 @@
   const [form, setForm] = React.useState(() => {
     try {
       localStorage.removeItem('uauu-v2-form');
-    } catch {}
+    } catch { }
     return {
       venue: '',
       date: '',
@@ -15,6 +15,7 @@
       notes: '',
     };
   });
+  const [extraOptions, setExtraOptions] = React.useState({});
   const [lang, setLang] = React.useState('ca');
   const [showCompactVenues, setShowCompactVenues] = React.useState(false);
   const [renderCompactVenues, setRenderCompactVenues] = React.useState(false);
@@ -194,8 +195,7 @@
           </div>
         </div>
 
-        <SummaryPanel form={form} quote={quote} lang={lang} />
-      </div>
+        <SummaryPanel form={form} quote={quote} lang={lang} extraOptions={form.extraOptions} />      </div>
     </div>
   );
 }

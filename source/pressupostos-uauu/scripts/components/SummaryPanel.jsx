@@ -1,4 +1,4 @@
-﻿function SummaryPanel({ form, quote, lang = 'ca' }) {
+﻿function SummaryPanel({ form, quote, extraOptions, lang = 'ca' }) {
   const venue = VENUES.find(v => v.id === form.venue);
   const t = PDF_TEXT[lang] || PDF_TEXT.ca;
   const months = t.months || MONTHS_CA;
@@ -49,15 +49,31 @@
               </div>
             )}
 
-            {quote.extrasLines.map(e => (
-              <div key={e.id} className="line-item">
-                <div className="li-left">
-                  <div className="li-label">{e.label} {e.isMandatory && <span className="li-mandatory-tag">{t.mandatory}</span>}</div>
-                  {e.priceDetail && <div className="li-detail">{e.priceDetail}</div>}
+            {quote.extrasLines.map(e => {
+
+              const currentSelectionId = extraOptions?.[e.id]?.dropdownSelection;
+
+              const selectedOption = e.dropdownOptions?.find(opt => opt.id === currentSelectionId);
+
+              return (
+                <div key={e.id} className="line-item">
+                  <div className="li-left">
+                    <div className="li-label">
+                      {e.label} {e.isMandatory && <span className="li-mandatory-tag">{t.mandatory}</span>}
+                    </div>
+
+                    {selectedOption && (
+                      <div className="li-detail">
+                        Seleccionat: {selectedOption.labels?.ca || selectedOption.label}
+                      </div>
+                    )}
+
+                    {e.priceDetail && <div className="li-detail">{e.priceDetail}</div>}
+                  </div>
+                  <div className="li-amount">{eur(e.computedPrice)}</div>
                 </div>
-                <div className="li-amount">{eur(e.computedPrice)}</div>
-              </div>
-            ))}
+              );
+            })}
 
             <div className="s-divider" />
             <div className="line-item li-muted">
