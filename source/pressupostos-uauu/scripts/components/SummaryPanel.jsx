@@ -49,31 +49,36 @@
               </div>
             )}
 
-            {quote.extrasLines.map(e => {
+            {quote.extrasLines
+              .filter(e => {
+                const isBuffetOrBar = e.id === 'barlliure';
+                const hasPrice = e.computedPrice > 0;
 
-              const currentSelectionId = extraOptions?.[e.id]?.dropdownSelection;
+                return hasPrice || isBuffetOrBar;
+              })
+              .map(e => {
+                const currentSelectionId = form.extraOptions?.[e.id]?.dropdownSelection;
+                const selectedOption = e.dropdownOptions?.find(opt => opt.id === currentSelectionId);
 
-              const selectedOption = e.dropdownOptions?.find(opt => opt.id === currentSelectionId);
-
-              return (
-                <div key={e.id} className="line-item">
-                  <div className="li-left">
-                    <div className="li-label">
-                      {e.label} {e.isMandatory && <span className="li-mandatory-tag">{t.mandatory}</span>}
-                    </div>
-
-                    {selectedOption && (
-                      <div className="li-detail">
-                        Seleccionat: {selectedOption.labels?.ca || selectedOption.label}
+                return (
+                  <div key={e.id} className="line-item">
+                    <div className="li-left">
+                      <div className="li-label">
+                        {e.label} {e.isMandatory && <span className="li-mandatory-tag">{t.mandatory}</span>}
                       </div>
-                    )}
 
-                    {e.priceDetail && <div className="li-detail">{e.priceDetail}</div>}
+                      {selectedOption && (
+                        <div className="li-detail">
+                          Seleccionat: {selectedOption.labels?.ca || selectedOption.label}
+                        </div>
+                      )}
+
+                      {e.priceDetail && <div className="li-detail">{e.priceDetail}</div>}
+                    </div>
+                    <div className="li-amount">{eur(e.computedPrice)}</div>
                   </div>
-                  <div className="li-amount">{eur(e.computedPrice)}</div>
-                </div>
-              );
-            })}
+                );
+              })}
 
             <div className="s-divider" />
             <div className="line-item li-muted">
