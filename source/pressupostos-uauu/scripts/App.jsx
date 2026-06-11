@@ -48,7 +48,16 @@
   }
 
   const dateYear = form.date ? new Date(form.date + 'T12:00:00').getFullYear() : null;
-  const barLliureExtra = getQuantityExtra(form.venue, dateYear, 'barlliure');
+
+  const venueConfig = PRICE_CONFIG.venues[form.venue];
+
+  let barLliureExtra = venueConfig?.extras?.[dateYear]?.find(e => e.id === 'barlliure') || null;
+
+  if (!barLliureExtra && venueConfig) {
+    barLliureExtra = venueConfig.BarraLliure || venueConfig.barralliure || venueConfig.barraLliure;
+  }
+
+  console.log("DEBUG FINAL: Finca:", form.venue, "Any:", dateYear, "Resultat:", barLliureExtra);
   const hasMountedRef = React.useRef(false);
   React.useEffect(() => {
     if (!hasMountedRef.current) {
@@ -58,7 +67,18 @@
     setForm(f => ({ ...f, selectedExtras: {}, extraQuantities: {} }));
   }, [form.venue, dateYear]);
 
-  const quote = React.useMemo(() => computeQuote({ ...form, lang }), [form, lang]);
+  const quote = React.useMemo(() => {
+    try {
+      const result = computeQuote({ ...form, lang });
+      if (!result) {
+        console.warn("DEBUG: computeQuote ha retornat null. Params:", { ...form });
+      }
+      return result;
+    } catch (e) {
+      console.error("DEBUG: Error crític a computeQuote:", e);
+      return null;
+    }
+  }, [form, lang]);
 
   React.useEffect(() => {
     if (showCompactVenues) {

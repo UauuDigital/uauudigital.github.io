@@ -159,7 +159,7 @@ function parseDays(dayCell) {
   ) {
     return [0, 1, 2, 3, 4, 5, 6];
   }
-  
+
   const dayMap = {
     'diumenge': 0, 'domingo': 0, 'sunday': 0, 'dg': 0, 'dg.': 0, 'dgo': 0, '0': 0,
     'dilluns': 1, 'lunes': 1, 'monday': 1, 'dl': 1, 'dl.': 1, 'lun': 1, '1': 1,
@@ -169,17 +169,17 @@ function parseDays(dayCell) {
     'divendres': 5, 'viernes': 5, 'friday': 5, 'dv': 5, 'dv.': 5, 'vie': 5, '5': 5,
     'dissabte': 6, 'sábado': 6, 'sabado': 6, 'saturday': 6, 'ds': 6, 'ds.': 6, 'sab': 6, '6': 6,
   };
-  
+
   const tokens = raw
     .replace(/\s+i\s+/gi, ',')
     .split(/[,;/|+\n-]/)
     .map(t => t.trim())
     .filter(Boolean);
   const days = [];
-  
+
   for (const token of tokens) {
     const normalized = normText(token);
-    
+
     if (token.includes('-') && !token.includes(',')) {
       const parts = token.split('-').map(p => p.trim());
       if (parts.length === 2) {
@@ -192,7 +192,7 @@ function parseDays(dayCell) {
         }
       }
     }
-    
+
     const directMatch = dayMap[normalized];
     if (directMatch !== undefined) {
       days.push(directMatch);
@@ -213,14 +213,14 @@ function parseDays(dayCell) {
       }
     }
   }
-  
+
   return [...new Set(days)];
 }
 
 function parseMonths(monthCell) {
   const raw = String(monthCell ?? '').trim().toLowerCase();
   if (!raw) return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-  
+
   const monthMap = {
     'gener': 1, 'january': 1, 'enero': 1, '1': 1,
     'febrer': 2, 'february': 2, 'febrero': 2, '2': 2,
@@ -235,13 +235,13 @@ function parseMonths(monthCell) {
     'novembre': 11, 'november': 11, 'noviembre': 11, '11': 11,
     'desembre': 12, 'december': 12, 'diciembre': 12, '12': 12,
   };
-  
+
   const tokens = raw.split(/[,;/|+\n-]/).map(t => t.trim()).filter(Boolean);
   const months = [];
-  
+
   for (const token of tokens) {
     const normalized = normText(token);
-    
+
     if (token.includes('-') && !token.includes(',')) {
       const parts = token.split('-').map(p => p.trim());
       if (parts.length === 2) {
@@ -256,7 +256,7 @@ function parseMonths(monthCell) {
         }
       }
     }
-    
+
     if (monthMap[normalized] !== undefined) {
       months.push(monthMap[normalized]);
     } else {
@@ -266,24 +266,24 @@ function parseMonths(monthCell) {
       }
     }
   }
-  
+
   return [...new Set(months)];
 }
 
 function parseExceptions(exceptionCell) {
   const raw = String(exceptionCell ?? '').trim().toLowerCase();
   if (!raw) return [];
-  
+
   const exceptions = [];
   const tokens = raw.split(/[,;/|+\n]/).map(t => t.trim().toLowerCase()).filter(Boolean);
-  
+
   for (const token of tokens) {
     const normalized = normText(token);
     if (normalized.includes('cap') && normalized.includes('any')) exceptions.push('new-year');
     if (normalized.includes('vigilia') || (normalized.includes('vigilies') && normalized.includes('festiu'))) exceptions.push('holiday-eve');
     if (normalized.includes('festiu') || normalized.includes('festivo') || normalized.includes('holiday')) exceptions.push('holiday');
   }
-  
+
   return [...new Set(exceptions)];
 }
 
@@ -292,11 +292,11 @@ function buildBarLliureByVenue(rows) {
   for (const venue of VENUES) byVenue[venue.id] = {};
 
   rows.forEach(row => {
-    const venueCell = pickColumn(row, ['mases', 'masia', 'finca', 'venue']);
-    const yearCell = pickColumn(row, ['ay', 'any', 'year']);
+    const venueCell = pickColumn(row, ['masies', 'masia', 'finca', 'venue']);
+    const yearCell = pickColumn(row, ['any', 'ay', 'year']);
     const minCell = pickColumn(row, ['min', 'mín', 'minimum']);
-    const siMinCell = pickColumn(row, ['simin€', 'simin', 'simin€', 'si min', 'si min€']);
-    const noMinCell = pickColumn(row, ['nomin#', 'nomin', 'no min', 'no min#']);
+    const siMinCell = pickColumn(row, ['simin€', 'simin', 'si min', 'si min€']);
+    const noMinCell = pickColumn(row, ['nomin€', 'nomin', 'no min', 'no min€']);
     const premiumCell = pickColumn(row, ['premium']);
 
     if (!venueCell || !yearCell) return;
@@ -310,6 +310,8 @@ function buildBarLliureByVenue(rows) {
     const premium = parseMoney(premiumCell);
 
     for (const venueId of venueIds) {
+      const normalizedId = normText(venueId);
+      if (!byVenue[normalizedId]) byVenue[normalizedId] = {};
       if (!byVenue[venueId][year]) byVenue[venueId][year] = [];
       byVenue[venueId][year].push({
         id: 'barlliure',
@@ -337,11 +339,11 @@ function buildBarLliureByVenue(rows) {
 
 function buildPriceMatrixFromMenu(rows) {
   const priceMatrixByVenue = {};
-  
+
   for (const venue of VENUES) {
     priceMatrixByVenue[venue.id] = {};
   }
-  
+
   rows.forEach((row, index) => {
     const venueCell = pickColumn(row, SPREADSHEET_COLUMNS.venue);
     const yearCell = pickColumn(row, SPREADSHEET_COLUMNS.year);
@@ -351,9 +353,9 @@ function buildPriceMatrixFromMenu(rows) {
     const dayCell = pickColumn(row, SPREADSHEET_COLUMNS.menuDays);
     const monthCell = pickColumn(row, SPREADSHEET_COLUMNS.menuMonths);
     const exceptionCell = pickColumn(row, SPREADSHEET_COLUMNS.menuExceptions);
-    
+
     if (!venueCell || !yearCell || !priceCell) return;
-    
+
     const venueIds = parseVenueIds(venueCell);
     const year = parseYearCell(yearCell);
     const price = parseMoney(priceCell);
@@ -363,19 +365,19 @@ function buildPriceMatrixFromMenu(rows) {
     const days = parseDays(dayCell);
     const months = parseMonths(monthCell);
     const exceptions = parseExceptions(exceptionCell);
-    
+
     if (!venueIds.length || !year || price === null || !days.length || !months.length) return;
-    
+
     for (const venueId of venueIds) {
       if (!priceMatrixByVenue[venueId][year]) {
         priceMatrixByVenue[venueId][year] = {};
       }
-      
+
       for (const dayOfWeek of days) {
         if (!priceMatrixByVenue[venueId][year][dayOfWeek]) {
           priceMatrixByVenue[venueId][year][dayOfWeek] = [];
         }
-        
+
         const entry = {
           months,
           price,
@@ -385,11 +387,11 @@ function buildPriceMatrixFromMenu(rows) {
         if (minimumPenaltyPerPerson !== null) {
           entry.minimumPenaltyPerPerson = minimumPenaltyPerPerson;
         }
-        
+
         if (exceptions.length) {
           entry.exceptions = exceptions;
         }
-        
+
         priceMatrixByVenue[venueId][year][dayOfWeek].push(entry);
       }
     }
@@ -407,7 +409,7 @@ function buildPriceMatrixFromMenu(rows) {
       }
     }
   }
-  
+
   return priceMatrixByVenue;
 }
 
@@ -428,11 +430,19 @@ function loadPriceRowsFromWorkbook(workbook) {
 
 function loadBarLliureRowsFromWorkbook(workbook) {
   if (!workbook || !workbook.SheetNames) return [];
+
+  const requiredKeys = ['masies', 'any', 'min', 'simin', 'nomin', 'premium'];
+
   for (const name of workbook.SheetNames) {
     const rows = sheetRowsWithHeaders(workbook.Sheets[name]);
     if (!rows.length) continue;
+
     const keys = Object.keys(rows[0] || {}).map(normText);
-    const hasBarHeaders = ['mases', 'ay', 'min', 'simin', 'nomin', 'premium'].every(h => keys.some(k => k.includes(h)));
+
+    const hasBarHeaders = requiredKeys.every(req =>
+      keys.some(k => k.includes(req) || req.includes(k))
+    );
+
     if (hasBarHeaders) return rows;
   }
   return [];
@@ -452,29 +462,30 @@ function applyPriceMatrixToConfig(priceMatrixByVenue) {
     if (!PRICE_CONFIG.venues[venue.id]) continue;
     
     const venueMatrix = priceMatrixByVenue[venue.id];
-    if (!venueMatrix) continue;
-    
-    for (const year in venueMatrix) {
-      if (!PRICE_CONFIG.venues[venue.id].priceMatrix[year]) {
-        PRICE_CONFIG.venues[venue.id].priceMatrix[year] = {};
-      }
-      
-      for (const dayOfWeek in venueMatrix[year]) {
-        PRICE_CONFIG.venues[venue.id].priceMatrix[year][dayOfWeek] = venueMatrix[year][dayOfWeek];
-      }
+    if (!venueMatrix) {
+       console.warn(`DEBUG: No s'ha trobat cap matriu de preus per a ${venue.id}`);
+       continue;
     }
+    
+    PRICE_CONFIG.venues[venue.id].priceMatrix = venueMatrix;
   }
 }
 
 function applyBarLliureToConfig(barByVenue) {
-  for (const venue of VENUES) {
-    if (!PRICE_CONFIG.venues[venue.id]) continue;
-    const venueRows = barByVenue?.[venue.id] || {};
-    for (const year of Object.keys(venueRows)) {
-      if (!PRICE_CONFIG.venues[venue.id].extras[year]) PRICE_CONFIG.venues[venue.id].extras[year] = [];
-      PRICE_CONFIG.venues[venue.id].extras[year] = [
-        ...PRICE_CONFIG.venues[venue.id].extras[year].filter(e => e.id !== 'barlliure'),
-        ...venueRows[year],
+  for (const venueId in barByVenue) {
+    const targetVenueId = idMap[normText(venueId)] || venueId;
+    
+    if (!PRICE_CONFIG.venues[targetVenueId]) continue;
+
+    const venueRows = barByVenue[venueId];
+    for (const year in venueRows) {
+      if (!PRICE_CONFIG.venues[targetVenueId].extras[year]) {
+        PRICE_CONFIG.venues[targetVenueId].extras[year] = [];
+      }
+
+      PRICE_CONFIG.venues[targetVenueId].extras[year] = [
+        ...PRICE_CONFIG.venues[targetVenueId].extras[year].filter(e => e.id !== 'barlliure'),
+        { id: 'barlliure', ...venueRows[year][0] }
       ];
     }
   }
@@ -482,28 +493,47 @@ function applyBarLliureToConfig(barByVenue) {
 
 async function loadExtrasFromSpreadsheet() {
   if (typeof window === 'undefined' || typeof fetch !== 'function') return {};
+  
   const response = await fetch(SPREADSHEET_URL, { cache: 'no-store' });
   if (!response.ok) throw new Error(`Spreadsheet fetch failed: ${response.status}`);
+  
   const buffer = await response.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: 'array' });
-  
+
   const priceMatrix = await loadPricesFromSpreadsheet(workbook);
   applyPriceMatrixToConfig(priceMatrix);
-  const barLliureRows = loadBarLliureRowsFromWorkbook(workbook);
-  if (barLliureRows.length) {
-    applyBarLliureToConfig(buildBarLliureByVenue(barLliureRows));
-  }
-  
+
   const firstSheetName = workbook.SheetNames[0];
-  if (!firstSheetName) return {};
   const sheet = workbook.Sheets[firstSheetName];
   const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-  return buildExtrasByVenue(rows);
+  const extrasByVenue = buildExtrasByVenue(rows);
+
+  const barLliureRows = loadBarLliureRowsFromWorkbook(workbook);
+  const barData = buildBarLliureByVenue(barLliureRows);
+
+  for (const venueId in barData) {
+    for (const year in barData[venueId]) {
+      if (!extrasByVenue[venueId]) extrasByVenue[venueId] = {};
+      if (!extrasByVenue[venueId][year]) extrasByVenue[venueId][year] = [];
+      
+      extrasByVenue[venueId][year].push({
+        id: 'barlliure',
+        ...barData[venueId][year][0]
+      });
+    }
+  }
+
+  applySpreadsheetExtras(extrasByVenue);
+  
+  return extrasByVenue;
 }
 
 function applySpreadsheetExtras(extrasByVenue) {
   for (const venue of VENUES) {
     const venueExtras = extrasByVenue?.[venue.id] || {};
-    PRICE_CONFIG.venues[venue.id].extras = venueExtras;
+    
+    for (const year in venueExtras) {
+      PRICE_CONFIG.venues[venue.id].extras[year] = venueExtras[year];
+    }
   }
 }

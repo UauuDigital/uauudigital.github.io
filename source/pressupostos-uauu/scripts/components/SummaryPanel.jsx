@@ -1,4 +1,5 @@
 ﻿function SummaryPanel({ form, quote, extraOptions, lang = 'ca' }) {
+  console.log("DEBUG SUMMARY: form:", form, "quote:", quote, "ready:", !!(form.venue && form.date && form.guests >= 1 && quote));
   const venue = VENUES.find(v => v.id === form.venue);
   const t = PDF_TEXT[lang] || PDF_TEXT.ca;
   const months = t.months || MONTHS_CA;
@@ -51,10 +52,8 @@
 
             {quote.extrasLines
               .filter(e => {
-                const isBuffetOrBar = e.id === 'barlliure';
-                const hasPrice = e.computedPrice > 0;
-
-                return hasPrice || isBuffetOrBar;
+                if (e.id === 'barlliure') return true;
+                return e.computedPrice > 0;
               })
               .map(e => {
                 const currentSelectionId = form.extraOptions?.[e.id]?.dropdownSelection;

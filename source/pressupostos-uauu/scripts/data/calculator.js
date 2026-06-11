@@ -62,23 +62,33 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
   const penaltyAmt = shortfall > 0 ? guests * minimumPenaltyPerPerson : 0;
 
   const allExtras = getExtras(venue, year);
+
+  const v = PRICE_CONFIG.venues[venue];
+  let barLliureExtra = getQuantityExtra(venue, year, 'barlliure') || v?.BarraLliure || v?.barralliure || v?.barraLliure;
+
+  if (barLliureExtra && !allExtras.find(e => e.id === 'barlliure')) {
+    allExtras.push({ ...barLliureExtra, id: 'barlliure' });
+  }
+
   const quantities = extraQuantities || {};
   const options = extraOptions || {};
 
   const extrasLines = allExtras.map(e => {
+    const isBarLliure = e.id === 'barlliure';
+    const extraOpts = options[e.id] || {};
+    const quantity = isBarLliure ? (Number(extraOpts.hours) || 0) :
+      (e.quantityBased ? Math.max(0, Math.round(Number(quantities[e.id] || 0))) : null);
     const condMandatory = e.mandatoryWhen ? e.mandatoryWhen(dow, month) : false;
-    const isMandatory = !e.optional || condMandatory;
-    const quantity = e.quantityBased ? Math.max(0, Math.round(Number(quantities[e.id] || 0))) : null;
+    const isMandatory = !e.optional || (e.mandatoryWhen ? e.mandatoryWhen(dow, month) : false); 
     const minQuantity = e.quantityBased ? (e.minQuantity ?? 0) : 0;
-    const included = isMandatory || selectedExtras[e.id] === true || (e.quantityBased && quantity > 0);
-    const hasQuantity = e.quantityBased ? quantity >= minQuantity : true;
+    const included = isBarLliure || isMandatory || selectedExtras[e.id] === true || (e.quantityBased && quantity > 0);
+    const hasQuantity = e.quantityBased ? quantity >= (e.minQuantity ?? 0) : true;
 
     let computedPrice = 0;
     let priceDetail = null;
 
     let currentPrice = e.price || 0;
     let variantSuffix = '';
-    const extraOpts = options[e.id] || {};
     const hasDropdownOptions = Array.isArray(e.dropdownOptions) && e.dropdownOptions.length > 0 && (e.extraType === 'desplegable' || wantsDropdown(e.extraListCell));
     const selectedDropdown = hasDropdownOptions
       ? e.dropdownOptions.find(opt => opt.id === extraOpts.dropdownSelection) || e.dropdownOptions[0]
