@@ -118,9 +118,11 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
       const halfPrice = useMinRates ? halfHours * halfRate : halfHours * halfRate * adults;
       const premiumPrice = premium ? adults * premiumRate : 0;
       computedPrice = fullPrice + halfPrice + premiumPrice;
-      priceDetail = useMinRates
-        ? `${extraHours}h${premium ? ` + premium ${eur(premiumRate)}/pers. × ${adults}` : ''} (preu fix)`
-        : `${extraHours}h × ${adults} adults${premium ? ` + premium ${eur(premiumRate)}/pers.` : ''}`;
+      const extraParts = [];
+      if (fullHours > 0) extraParts.push(useMinRates ? `${fullHours}h × ${eur(fullRate)}` : `${fullHours}h × ${adults} × ${eur(fullRate)}`);
+      if (halfHours > 0) extraParts.push(useMinRates ? `0,5h × ${eur(halfRate)}` : `0,5h × ${adults} × ${eur(halfRate)}`);
+      if (premium) extraParts.push(`premium ${eur(premiumRate)}/pers. × ${adults}`);
+      priceDetail = `2h incloses${extraParts.length ? ` · ${extraParts.join(' + ')}` : ''}`;
 
 
     } else if (e.quantityBased) {
