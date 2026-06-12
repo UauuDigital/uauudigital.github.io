@@ -1281,6 +1281,16 @@ input[type="range"]::-webkit-slider-thumb {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+    position: relative;
+    padding-right: 40px;
+  }
+
+  .extra-remove-btn {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    margin-left: 0;
   }
 
   .extra-toggle,
