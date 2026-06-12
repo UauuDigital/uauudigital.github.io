@@ -52,6 +52,7 @@ const PDF_TEXT = {
     pdfMenuDetail: (n, ppp) => `${n} convidats × ${eur(ppp)}/pers.`,
     pdfMinDetail: (short, pen) => `${short} persones × ${eur(pen)}`,
     emptyState: 'Omple la finca, la data i el nombre de convidats per veure el pressupost en temps real.',
+    fallbackYear: (used, requested) => `Preus ${used} aplicats · tarifes ${requested} encara no disponibles`,
     months: MONTHS_CA,
   },
   es: {
@@ -79,6 +80,7 @@ const PDF_TEXT = {
     pdfMenuDetail: (n, ppp) => `${n} invitados × ${eur(ppp)}/pers.`,
     pdfMinDetail: (short, pen) => `${short} personas × ${eur(pen)}`,
     emptyState: 'Rellena la finca, la fecha y el número de invitados para ver el presupuesto en tiempo real.',
+    fallbackYear: (used, requested) => `Precios ${used} aplicados · tarifas ${requested} aún no disponibles`,
     months: ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],
   },
   en: {
@@ -106,6 +108,7 @@ const PDF_TEXT = {
     pdfMenuDetail: (n, ppp) => `${n} guests × ${eur(ppp)}/person`,
     pdfMinDetail: (short, pen) => `${short} persons × ${eur(pen)}`,
     emptyState: 'Fill in the venue, date and number of guests to see the live estimate.',
+    fallbackYear: (used, requested) => `${used} prices applied · ${requested} rates not yet available`,
     months: ['January','February','March','April','May','June','July','August','September','October','November','December'],
   },
 };

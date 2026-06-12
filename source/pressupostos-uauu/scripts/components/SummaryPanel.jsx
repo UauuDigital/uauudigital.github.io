@@ -97,6 +97,9 @@
               <div className="total-amount">{eur(quote.total)}</div>
             </div>
             <p className="summary-note">{t.footerNote}</p>
+            {quote.year !== quote.usedYear && t.fallbackYear && (
+              <p className="summary-note summary-note--fallback">{t.fallbackYear(quote.usedYear, quote.year)}</p>
+            )}
           </div>
           <button className={`export-btn${mobileDrawer ? ' mobile-summary-export-btn' : ''}`} onClick={handleExport}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

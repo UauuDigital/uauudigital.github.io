@@ -43,6 +43,7 @@ th:last-child{text-align:right}
 .t-amount{font-size:30px;font-weight:300}
 .t-pp{font-size:12px;font-style:italic;color:#7e8c8d;margin-top:3px}
 .notes{margin-top:28px;padding:18px;background:#f5f2ed;border-radius:4px;font-size:13px;font-style:italic;color:#515856;line-height:1.6}
+.fallback-year-notice{margin-top:16px;font-family:system-ui,sans-serif;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#7e8c8d;font-style:normal}
 .footer{margin-top:52px;padding-top:20px;border-top:1px solid #eaeced;display:flex;justify-content:space-between;align-items:flex-end}
 .footer-l{font-family:system-ui,sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#7e8c8d;margin-bottom:4px}
 .footer-v{font-size:12px;font-style:italic;color:#7e8c8d}
@@ -75,6 +76,7 @@ th:last-child{text-align:right}
     </tfoot>
   </table>
   ${form.notes ? `<div class="notes">${escapeHtml(form.notes)}</div>` : ''}
+  ${quote.year !== quote.usedYear && t.fallbackYear ? `<div class="fallback-year-notice">${t.fallbackYear(quote.usedYear, quote.year)}</div>` : ''}
   <div class="footer">
     <div><div class="footer-l">UAUU weddings &amp; events</div><div class="footer-v">Avda. Mestre Montaner, 44-45, Igualada (Barcelona)</div><div class="footer-v">info@uauu.cat · +34 634 438 736</div></div>
     <div class="footer-r">${t.footerNote}</div>
