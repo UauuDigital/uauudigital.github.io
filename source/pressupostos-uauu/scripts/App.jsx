@@ -15,7 +15,6 @@
       notes: '',
     };
   });
-  const [extraOptions, setExtraOptions] = React.useState({});
   const [lang, setLang] = React.useState('ca');
   const [showCompactVenues, setShowCompactVenues] = React.useState(false);
   const [renderCompactVenues, setRenderCompactVenues] = React.useState(false);
@@ -52,13 +51,8 @@
 
   const venueConfig = PRICE_CONFIG.venues[form.venue];
 
-  let barLliureExtra = venueConfig?.extras?.[dateYear]?.find(e => e.id === 'barlliure') || null;
+  const barLliureExtra = venueConfig?.extras?.[dateYear]?.find(e => e.id === 'barlliure') || null;
 
-  if (!barLliureExtra && venueConfig) {
-    barLliureExtra = venueConfig.BarraLliure || venueConfig.barralliure || venueConfig.barraLliure;
-  }
-
-  console.log("DEBUG FINAL: Finca:", form.venue, "Any:", dateYear, "Resultat:", barLliureExtra);
   const hasMountedRef = React.useRef(false);
   React.useEffect(() => {
     if (!hasMountedRef.current) {
@@ -71,12 +65,8 @@
   const quote = React.useMemo(() => {
     try {
       const result = computeQuote({ ...form, lang });
-      if (!result) {
-        console.warn("DEBUG: computeQuote ha retornat null. Params:", { ...form });
-      }
       return result;
     } catch (e) {
-      console.error("DEBUG: Error crític a computeQuote:", e);
       return null;
     }
   }, [form, lang]);

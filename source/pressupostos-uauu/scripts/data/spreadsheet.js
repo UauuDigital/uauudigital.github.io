@@ -310,8 +310,7 @@ function buildBarLliureByVenue(rows) {
     const premium = parseMoney(premiumCell);
 
     for (const venueId of venueIds) {
-      const normalizedId = normText(venueId);
-      if (!byVenue[normalizedId]) byVenue[normalizedId] = {};
+      if (!byVenue[venueId]) continue;
       if (!byVenue[venueId][year]) byVenue[venueId][year] = [];
       byVenue[venueId][year].push({
         id: 'barlliure',
@@ -463,7 +462,6 @@ function applyPriceMatrixToConfig(priceMatrixByVenue) {
     
     const venueMatrix = priceMatrixByVenue[venue.id];
     if (!venueMatrix) {
-       console.warn(`DEBUG: No s'ha trobat cap matriu de preus per a ${venue.id}`);
        continue;
     }
     
@@ -525,7 +523,6 @@ async function loadExtrasFromSpreadsheet() {
 
   applySpreadsheetExtras(extrasByVenue);
   
-  console.log('Spreadsheet extras loaded and applied:', extrasByVenue);
 
   return extrasByVenue;
 }

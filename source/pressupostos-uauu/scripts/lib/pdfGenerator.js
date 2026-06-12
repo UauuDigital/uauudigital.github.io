@@ -1,4 +1,8 @@
-﻿function pdfHTML({ form, quote, venue, dateStr, coupleStr, refNum, today, lang = 'ca' }) {
+﻿function escapeHtml(str) {
+  return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function pdfHTML({ form, quote, venue, dateStr, coupleStr, refNum, today, lang = 'ca' }) {
   const t = PDF_TEXT[lang] || PDF_TEXT.ca;
   const vatPct = Math.round(PRICE_CONFIG.vatRate * 100);
   const linesRows = [
@@ -70,7 +74,7 @@ th:last-child{text-align:right}
       <tr><td class="total-td"><div class="t-label">${t.totalLabel}</div><div class="t-amount">${eur(quote.total)}</div></td><td class="total-td"></td></tr>
     </tfoot>
   </table>
-  ${form.notes ? `<div class="notes">${form.notes}</div>` : ''}
+  ${form.notes ? `<div class="notes">${escapeHtml(form.notes)}</div>` : ''}
   <div class="footer">
     <div><div class="footer-l">UAUU weddings &amp; events</div><div class="footer-v">Avda. Mestre Montaner, 44-45, Igualada (Barcelona)</div><div class="footer-v">info@uauu.cat · +34 634 438 736</div></div>
     <div class="footer-r">${t.footerNote}</div>

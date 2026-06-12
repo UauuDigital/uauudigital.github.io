@@ -1,5 +1,4 @@
 ﻿function SummaryPanel({ form, quote, extraOptions, lang = 'ca', mobileDrawer = false }) {
-  console.log("DEBUG SUMMARY: form:", form, "quote:", quote, "ready:", !!(form.venue && form.date && form.guests >= 1 && quote));
   const venue = VENUES.find(v => v.id === form.venue);
   const t = PDF_TEXT[lang] || PDF_TEXT.ca;
   const months = t.months || MONTHS_CA;
@@ -9,7 +8,10 @@
 
   function handleExport() {
     const coupleStr = form.coupleName || t.coupleLabel;
-    const refNum = `UAUU-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+    const randPart = typeof crypto !== 'undefined' && crypto.getRandomValues
+      ? String(crypto.getRandomValues(new Uint16Array(1))[0]).padStart(5, '0').slice(-4)
+      : String(Math.floor(Math.random() * 9000) + 1000);
+    const refNum = `UAUU-${new Date().getFullYear()}-${randPart}`;
     const today = t.dateFormat(new Date(), months);
     const w = window.open('', '_blank');
     w.document.write(pdfHTML({ form, quote, venue, dateStr, coupleStr, refNum, today, lang }));
