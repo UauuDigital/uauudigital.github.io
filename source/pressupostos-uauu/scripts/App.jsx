@@ -159,7 +159,7 @@
             <div className="event-details-list">
               <div className="field">
                 <label>Data de la boda</label>
-                <input type="date" value={form.date} className={form.date ? 'filled' : ''} min={`${new Date().getFullYear()}-01-01`} onChange={e => set('date', e.target.value)} />
+                <DatePicker value={form.date} onChange={val => set('date', val)} min={`${new Date().getFullYear()}-01-01`} lang={lang} />
               </div>
               <div className="field">
                 <label>Nombre de convidats</label>
