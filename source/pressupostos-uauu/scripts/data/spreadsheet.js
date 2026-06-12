@@ -294,9 +294,9 @@ function buildBarLliureByVenue(rows) {
   rows.forEach(row => {
     const venueCell = pickColumn(row, ['masies', 'masia', 'finca', 'venue']);
     const yearCell = pickColumn(row, ['any', 'ay', 'year']);
-    const minCell = pickColumn(row, ['min', 'mín', 'minimum']);
-    const siMinCell = pickColumn(row, ['simin€', 'simin', 'si min', 'si min€']);
-    const noMinCell = pickColumn(row, ['nomin€', 'nomin', 'no min', 'no min€']);
+    const minCell = pickColumnStrict(row, ['min', 'mín', 'minimum']);
+    const siMinCell = pickColumnStrict(row, ['simin€', 'simin', 'si min€', 'si min']);
+    const noMinCell = pickColumnStrict(row, ['nomin€', 'nomin', 'no min€', 'no min']);
     const premiumCell = pickColumn(row, ['premium']);
 
     if (!venueCell || !yearCell) return;
@@ -525,6 +525,8 @@ async function loadExtrasFromSpreadsheet() {
 
   applySpreadsheetExtras(extrasByVenue);
   
+  console.log('Spreadsheet extras loaded and applied:', extrasByVenue);
+
   return extrasByVenue;
 }
 

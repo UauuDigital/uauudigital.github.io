@@ -79,7 +79,7 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
     const quantity = isBarLliure ? (Number(extraOpts.hours) || 0) :
       (e.quantityBased ? Math.max(0, Math.round(Number(quantities[e.id] || 0))) : null);
     const condMandatory = e.mandatoryWhen ? e.mandatoryWhen(dow, month) : false;
-    const isMandatory = !e.optional || (e.mandatoryWhen ? e.mandatoryWhen(dow, month) : false); 
+    const isMandatory = !e.optional || (e.mandatoryWhen ? e.mandatoryWhen(dow, month) : false);
     const minQuantity = e.quantityBased ? (e.minQuantity ?? 0) : 0;
     const included = isBarLliure || isMandatory || selectedExtras[e.id] === true || (e.quantityBased && quantity > 0);
     const hasQuantity = e.quantityBased ? quantity >= (e.minQuantity ?? 0) : true;
@@ -107,25 +107,8 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
       }
     }
 
-    if (e.quantityBased) {
-      const extraUnitQty = Math.max(0, Math.round(Number(extraOpts.extraUnitQty ?? 0)));
-      const extraUnitPrice = Number(e.extraUnitPair?.price ?? 0);
-      computedPrice = (quantity * currentPrice) + (extraUnitQty * extraUnitPrice);
-      const unitLabel = e.unit === 'person' ? 'persones' : e.unit === 'pack' ? 'packs' : 'unitats';
-      const extraUnitLabel = e.extraUnitPair ? ` + ${extraUnitQty} ${e.extraUnitPair.label} × ${eur(extraUnitPrice)}` : '';
-      priceDetail = `${quantity} ${unitLabel}${variantSuffix} × ${eur(currentPrice)}${extraUnitLabel}`;
-    } else if (e.extraUnitPair) {
-      const extraUnitQty = Math.max(0, Math.round(Number(extraOpts.extraUnitQty ?? 0)));
-      const extraUnitPrice = Number(e.extraUnitPair.price ?? 0);
-      computedPrice = currentPrice + (extraUnitQty * extraUnitPrice);
-      priceDetail = `${eur(currentPrice)}${extraUnitQty > 0 ? ` + ${extraUnitQty} ${e.extraUnitPair.label} × ${eur(extraUnitPrice)}` : ''}`;
-    } else if (e.pricingFn) {
-      computedPrice = e.pricingFn(guests) || 0;
-      priceDetail = e.pricingFnDetail ? e.pricingFnDetail(guests) : null;
-    } else if (e.pricePerPerson) {
-      computedPrice = Math.max(guests * e.pricePerPerson, e.minPrice || 0);
-      priceDetail = `${guests} pers. × ${eur(e.pricePerPerson)} (mínim ${eur(e.minPrice)})`;
-    } else if (e.id === 'barlliure') {
+    if (e.id === 'barlliure') {
+
       const rates = e.barLliureRates || {};
       const premium = extraOpts.premium === true;
       const extraHours = Math.max(0, Math.min(3, Number(extraOpts.hours ?? 0)));
@@ -136,11 +119,46 @@ function computeQuote({ venue, date, guests, selectedExtras = {}, extraQuantitie
       const fullRate = Number(useMinRates ? rates.siMinFull : rates.noMinFull ?? rates.noMin ?? rates.siMinFull ?? 0);
       const halfRate = Number(useMinRates ? rates.siMinHalf : rates.noMinHalf ?? rates.noMin ?? rates.siMinHalf ?? fullRate);
       const premiumRate = Number(rates.premium ?? 0);
-      const fullPrice = fullHours * fullRate * adults;
-      const halfPrice = halfHours * halfRate * adults;
+      const fullPrice = useMinRates ? fullHours * fullRate : fullHours * fullRate * adults;
+      const halfPrice = useMinRates ? halfHours * halfRate : halfHours * halfRate * adults;
       const premiumPrice = premium ? adults * premiumRate : 0;
       computedPrice = fullPrice + halfPrice + premiumPrice;
-      priceDetail = `${extraHours}h extra × ${adults} adults${premium ? ` + premium ${eur(premiumRate)}/pers.` : ''}`;
+      priceDetail = useMinRates
+        ? `${extraHours}h${premium ? ` + premium ${eur(premiumRate)}/pers. × ${adults}` : ''} (preu fix)`
+        : `${extraHours}h × ${adults} adults${premium ? ` + premium ${eur(premiumRate)}/pers.` : ''}`;
+
+      console.log('nom: ', e.label, 'Barra Lliure:', { extraHours, fullHours, halfHours, adults, useMinRates, fullRate, halfRate, premiumRate, fullPrice, halfPrice, premiumPrice, computedPrice });
+
+    } else if (e.quantityBased) {
+      const extraUnitQty = Math.max(0, Math.round(Number(extraOpts.extraUnitQty ?? 0)));
+      const extraUnitPrice = Number(e.extraUnitPair?.price ?? 0);
+      computedPrice = (quantity * currentPrice) + (extraUnitQty * extraUnitPrice);
+      const unitLabel = e.unit === 'person' ? 'persones' : e.unit === 'pack' ? 'packs' : 'unitats';
+      const extraUnitLabel = e.extraUnitPair ? ` + ${extraUnitQty} ${e.extraUnitPair.label} × ${eur(extraUnitPrice)}` : '';
+      priceDetail = `${quantity} ${unitLabel}${variantSuffix} × ${eur(currentPrice)}${extraUnitLabel}`;
+
+      console.log('nom: ', e.label, 'quantityBased:', { quantity, currentPrice, extraUnitQty, extraUnitPrice, computedPrice });
+
+    } else if (e.extraUnitPair) {
+      const extraUnitQty = Math.max(0, Math.round(Number(extraOpts.extraUnitQty ?? 0)));
+      const extraUnitPrice = Number(e.extraUnitPair.price ?? 0);
+      computedPrice = currentPrice + (extraUnitQty * extraUnitPrice);
+      priceDetail = `${eur(currentPrice)}${extraUnitQty > 0 ? ` + ${extraUnitQty} ${e.extraUnitPair.label} × ${eur(extraUnitPrice)}` : ''}`;
+
+      console.log('nom: ', e.label, 'extraUnitPair:', { extraUnitQty, extraUnitPrice, currentPrice, computedPrice });
+
+    } else if (e.pricingFn) {
+      computedPrice = e.pricingFn(guests) || 0;
+      priceDetail = e.pricingFnDetail ? e.pricingFnDetail(guests) : null;
+
+      console.log('nom: ', e.label, 'pricingFn:', { guests, computedPrice });
+
+    } else if (e.pricePerPerson) {
+      computedPrice = Math.max(guests * e.pricePerPerson, e.minPrice || 0);
+      priceDetail = `${guests} pers. × ${eur(e.pricePerPerson)} (mínim ${eur(e.minPrice)})`;
+
+      console.log('nom: ', e.label, 'pricePerPerson:', { guests, pricePerPerson: e.pricePerPerson, minPrice: e.minPrice, computedPrice });
+
     } else {
       computedPrice = currentPrice;
     }

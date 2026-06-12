@@ -166,9 +166,12 @@
                 <input type="range" min={10} max={400} step={1} value={form.guests} onChange={e => set('guests', Number(e.target.value))} />
                 <div className="range-labels"><span>10</span><span>400</span></div>
               </div>
-              {barLliureExtra && (
+            </div>
+            <DateInfoStrip venueId={form.venue} date={form.date} />
+            {barLliureExtra && (
                 <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <div className="field" style={{ flex: 1 }}>
+                    <br></br>
                     <label>Barra lliure</label>
                     <div className="event-extra-price" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                       <span>2 hores incloses al menú</span>
@@ -179,8 +182,6 @@
                   </div>
                 </div>
               )}
-            </div>
-            <DateInfoStrip venueId={form.venue} date={form.date} />
           </div>
 
           <ExtrasSection

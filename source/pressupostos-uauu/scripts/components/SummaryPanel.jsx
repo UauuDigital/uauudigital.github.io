@@ -77,7 +77,8 @@
                     <div className="li-amount">{eur(e.computedPrice)}</div>
                   </div>
                 );
-              })}
+              })
+            }
 
             <div className="s-divider" />
             <div className="line-item li-muted">
