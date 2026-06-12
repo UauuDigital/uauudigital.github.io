@@ -965,6 +965,11 @@ input[type="range"]::-webkit-slider-thumb {
 
 /* ── Responsivitat ── */
 
+.mobile-summary-bar,
+.mobile-summary-drawer {
+  display: none;
+}
+
 /* Tabletes */
 @media (max-width: 1024px) {
   .app-body {

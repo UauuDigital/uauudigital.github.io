@@ -134,7 +134,16 @@
             type="text"
             placeholder="Selecciona o escriu un servei..."
             value={optionalSelection}
-            onChange={(ev) => setOptionalSelection(ev.target.value)}
+            onChange={(ev) => {
+              const val = ev.target.value;
+              setOptionalSelection(val);
+              const match = parseOptionalSelectionValue(val);
+              if (match) {
+                handleOptionalSelect(match.id);
+                setOptionalSelection('');
+                ev.target.blur();
+              }
+            }}
             onBlur={(ev) => {
               handleOptionalInputCommit(ev.target.value);
               setOptionalSelection('');
